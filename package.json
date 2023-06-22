@@ -2,6 +2,10 @@
   "name": "@syncpoint/signal",
   "version": "0.0.1",
   "description": "Algebraic type for time varying values",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/syncpoint/signal.git"
+  },
   "main": "lib/signal.js",
   "scripts": {
     "test": "mocha --recursive test/",
