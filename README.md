@@ -143,7 +143,7 @@ R.range(0, 8)
 
 In the preceding example, signals are passed between different functions. Can you pin point the spots?
 
-#### Fineprint
+#### Fine-print: `undefined`
 
 `undefined` (as apposed to `null`) is not considered a valid value for signals. We say a signal is undefined, when it holds `undefined` as its current value. Signals may start off undefined: `Signal.of()`, but once they have a valid value, there is no way back to undefined.
 
@@ -181,6 +181,8 @@ a(3); a(3); acc // [1, 2, 3]
 a(1); acc // [1, 2, 3, 1]
 ```
 
+#### Fine-print: Glitch-free
+
 Updates are efficient and glitch-free, i.e. there is no inconsistent intermediate state which can be observed. Consider the following diamond-shaped dependencies.
 
 ```javascript
@@ -197,8 +199,96 @@ acc // [2] (d was evaluated once)
 a(3); acc // [2, 1] (d was evaluated once again)
 ```
 
+#### Fine-print: Disposable
+
+You might have noticed the absence of `stream.end` which flyd provides for ending streams and removing them from the dependency graph. That's because signals cannot be ended or closed. Also there is no way of removing signals or dependencies programmatically from the static dependency graph once they have been added. With one exception, which happens under the hood in private territory: `chain`. `chain` operates on a signal of signal of values `Signal s => s s a`. For each new signal of values `chain` receives, a linked signal (an effect actually) is created which update the outer output signal with values it receives from the current signal of values. Upon arrival of a new signal of values, this effect is unlinked and the dependency is removed from the previous signal of values. Now for the interesting part: When the current signals is replaced with a new one, `chain` checks if the signal incidentally has a `dispose` function. If so `dispose` is called during the process of unlinking the effect from the signal of values. `dispose` is completely optional, but can be useful to clean up resources of streams which are dynamically created and flattened through `chain`. `fromListeners` operator for example has a `dispose` function which removes registered listeners from the target.
+
+```javascript
+const { chain, fromListeners } = Signal
+const target = Signal.of()
+const events = chain(fromListeners(['change']), target)
+```
+
+Whenever `target` is updated with a new target, change listener is registered on the new target and deregistered from the previous target. `event` is updated with (flattened) change events.
+
+Super fine-print: When `chain` function does return a value other than a signal (null for example), the previous signal of values (if any) is cleaned up and no new effect is created until a signal of values is received again.
+
+#### Fine-print: Error Handling
+
+Easy! None. Using Maybe, Either or similar as signal values might be beneficial.
+
 #### Why signals and not streams?
 
-In FRP, terms still seem a little fuzzy, maybe because there are. But one thing seems pretty clear: Streams don't have the notion of a *current value*, which can be queried at any given time. Thus we use the term signal. Signals (think of digital logic circuits), have discrete values which can and usually do vary over time. Also, we *link* one or more input signals to one output signal `const AND = link((a, b) => a && b, [a, b])`.
+Streams don't have the notion of a *current value*, which can be queried at any given time. Hence we favor the term signal over stream. Signals (think of digital logic circuits), have discrete values which can and usually do vary over time. Also, we *link* one or more input signals to one output signal `const AND = link((a, b) => a && b, [a, b])`.
+
+#### Miscellaneous Operators
+
+The following operators live under the Signal namespace and might be handy or they might not. There is no real reason to include them in this library, except that we use them for a different project. These operators can all be implemented with a few lines of code and only use the public API introduced so far. 
+
+`fromListeners` was already mentioned above.
+
+```
+fromListeners :: [String] -> Target -> Signal Event
+```
+
+`startWith` injects a signal value where a signal would be undefined otherwise. This is mainly relevant for linked signals or signals created from listeners.
+
+```javascript
+// startWith :: Signal s => a -> s a -> s a
+// startWith :: Signal s => (() -> a) -> s a -> s a
+const a = Signal.of()
+const b = link(a => a + 1, a)
+const c = Signal.startWith(0, b)
+c() // 0
+```
+
+`scan` feeds back the calculated signal value as an accumulator for the next value.
+
+```javascript
+// scan :: Signal s => (b -> a -> b) -> b -> s a -> s b
+const a = Signal.of()
+const b = Signal.scan((acc, a) => acc + a, 0, a)
+R.range(0, 10).forEach(a)
+b() // 45; sum 0..9
+```
+
+`loop` is similar to `scan`, but the value for the accumulator and the returned signal value can be different.
+
+```javascript
+// loop :: Signal s => (b -> a -> [b, c]) -> b -> s a -> s c
+const average = xs => xs.reduce((a, b) => a + b) / xs.length
+const a = Signal.of()
+const b = Signal.loop((xs, x) => {
+  xs.push(x); xs = xs.slice(-10)
+  return [xs, average(xs)]
+}, [], a)
+R.range(0, 20).forEach(a)
+b() // 14.5; sum 10..19 / 10
+```
+
+`lift` applies the values of *n* signals to a n-ary function. It might not be obvious, but `lift` is pretty much the same as `link`, expect for the signal parameters, which are not given as an array of signals, but individually.
+
+```javascript
+// lift :: Signal s => ((a -> b -> ...) -> x) -> s a -> s b -> ... -> s x
+const a = Signal.of()
+const b = Signal.of()
+const c = Signal.lift((a, b) => a + b, a, b)
+a(1); b(2); c() // 3
+```
+
+`tap` is used for side-effects while passing on the value (hopefully unchanged).
+
+```javascript
+// tap :: Signal s => (a -> any) -> s a -> s a
+const fn = R.compose(
+  Signal.tap(x => console.log(x)), // 2
+  R.map(x => x + 1)
+)
+
+const a = fn(Signal.of(1))
+a() // 2
+```
+
+
 
 To be continued...
