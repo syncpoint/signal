@@ -65,6 +65,84 @@ const a = fn(Signal.of(3))
 a() // true
 ```
 
+#### Nested signals, reads, writes
+
+Although we advise against using functions with side-effects where possible, you can do so with Signals. Consider the following example. In link function of `b`, at label L0 `flag` in parent scope is updated to true. Updating `a` at L1 triggers the evaluation of `a`'s link function. Current value of `flag` is true during this evaluation. Control is only returned to L2 after all of `a`'s dependent links are evaluated and updated.
+
+```javascript
+const acc = []
+const push = x => acc.push(x)
+
+const flag = Signal.of(false)
+const a = Signal.of()
+const b = Signal.of()
+
+link(a => {
+  push(`[2]:${a}`)
+  push(`[3]:${flag()}`)
+}, a)
+
+link(b => {
+    push(`[1]:${b}`)
+L0: flag(true)
+L1: a(b * 2)
+L2: flag(false)
+    push(`[4]${flag()}`)
+}, b)
+
+b(2); acc // ['[1]:2', '[2]:4', '[3]:true', '[4]:false']
+```
+
+Signals as well can be nested as one would expect.
+
+```javascript
+const a = Signal.of(6)
+const b = link(a => {
+  const c = Signal.of(a * 2)
+  const d = link(c => c / 3, c)
+  return d()
+}, a)
+b() // 4
+```
+
+And, finally, signals can be passed around like ordinary values (which they are). Let's see how a full adder might be patched together with some logical gates.
+
+```javascript
+const toString = radix => s => s.toString(radix)
+const padStart = (length, pad) => s => s.padStart(length, pad)
+const split = separator => s => s.split(separator)
+const binary = R.compose(
+  R.map(Number), split(''), padStart(3, '0'), toString(2)
+)
+
+const XOR = R.unapply(link((a, b) => a ^ b))
+const AND = R.unapply(link((a, b) => a & b))
+const OR = R.unapply(link((a, b) => a | b))
+
+const FULL_ADDER = ([a, b, c_in]) => {
+  const x = XOR(a, b)
+  const y = AND(x, c_in)
+  const z = AND(a, b)
+  const s = XOR(x, c_in)
+  const c_out = OR(y, z)
+  return [s, c_out]
+}
+
+const inputs = R.times(() => Signal.of(), 3)
+
+link(
+  (...xs) => console.log(xs),
+  [...inputs, ...FULL_ADDER(inputs)]
+)
+
+R.range(0, 8)
+  .map(binary)
+  .flatMap(values => R.zip(inputs, values))
+  .forEach(([fn, v]) => fn(v))
+```
+
+In the preceding example, signals are passed between different functions. Can you pin point the spots?
+
 #### Fineprint
 
 `undefined` (as apposed to `null`) is not considered a valid value for signals. We say a signal is undefined, when it holds `undefined` as its current value. Signals may start off undefined: `Signal.of()`, but once they have a valid value, there is no way back to undefined.
