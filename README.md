@@ -141,11 +141,11 @@ R.range(0, 8)
   .forEach(([fn, v]) => fn(v))
 ```
 
-In the preceding example, signals are passed between different functions. Can you pin point the spots?
+In the preceding example, signals are passed between different functions. Can you spot the locations?
 
 #### Fine-print: `undefined`
 
-`undefined` (as apposed to `null`) is not considered a valid value for signals. We say a signal is undefined, when it holds `undefined` as its current value. Signals may start off undefined: `Signal.of()`, but once they have a valid value, there is no way back to undefined.
+`undefined` (in contrast to `null`) is not considered a valid value for signals. We say a signal is undefined, when it holds `undefined` as its current value. Signals may start off undefined: `Signal.of()`, but once they have a valid value, there is no way back to undefined.
 
 ```javascript
 const a = Signal.of()
@@ -201,7 +201,7 @@ a(3); acc // [2, 1] (d was evaluated once again)
 
 #### Fine-print: Disposable
 
-You might have noticed the absence of `stream.end` which flyd provides for ending streams and removing them from the dependency graph. That's because signals cannot be ended or closed. Also there is no way of removing signals or dependencies programmatically from the static dependency graph once they have been added. With one exception, which happens under the hood in private territory: `chain`. `chain` operates on a signal of signal of values `Signal s => s s a`. For each new signal of values `chain` receives, a linked signal (an effect actually) is created which update the outer output signal with values it receives from the current signal of values. Upon arrival of a new signal of values, this effect is unlinked and the dependency is removed from the previous signal of values. Now for the interesting part: When the current signals is replaced with a new one, `chain` checks if the signal incidentally has a `dispose` function. If so `dispose` is called during the process of unlinking the effect from the signal of values. `dispose` is completely optional, but can be useful to clean up resources of streams which are dynamically created and flattened through `chain`. `fromListeners` operator for example has a `dispose` function which removes registered listeners from the target.
+You might have noticed the absence of `stream.end` which flyd provides for ending streams and removing them from the dependency graph. That's because signals cannot be ended or closed. Also there is no way of removing signals or dependencies programmatically from the static dependency graph once they have been added. With one exception, which happens under the hood in private territory: `chain`. `chain` operates on a signal of signal of values `Signal s => s s a`. For each new signal of values `chain` receives, a linked signal (an effect actually) is created which update the outer output signal with values it receives from the current signal of values. Upon arrival of a new signal of values, this effect is unlinked and the dependency is removed from the previous signal of values. Now for the interesting part: When the current signals is replaced with a new one, `chain` checks if the signal incidentally has a `dispose` function. If so `dispose` is called during the process of unlinking the effect from the signal of values. `dispose` is completely optional, but can be useful to clean up resources of signals which are dynamically created and flattened through `chain`. `fromListeners` operator for example has a `dispose` function which removes registered listeners from the target.
 
 ```javascript
 const { chain, fromListeners } = Signal
