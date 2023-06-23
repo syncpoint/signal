@@ -4,7 +4,7 @@ Time-varying values with acyclic static dependencies and synchronous glitch-free
 
 #### Introduction
 
-Signal provides two primitives: *Simple signals* `Signal.of` and *linked signals* `signal.link`. Simple signals are just containers for a current value. One or more input signals can be linked to one output signal. The link function derives the output value from the input values. The output signal's value is automatically updated when at least one input signal's value has changed. Note: Feeding the values of input signals into the link function promotes the use of pure functions.
+Signal provides two primitives: *Simple signals* `Signal.of` and *linked signals* `signal.link`. Simple signals are just containers for a current value. One or more input signals can be linked to one output signal. The link function derives the output value from the input values. The output signal's value is automatically updated when at least one input signal's value has changed.
 
 ```javascript
 const sum = (a, b) => a + b
