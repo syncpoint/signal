@@ -439,7 +439,7 @@ describe('Interface Specification', function () {
       assert.strictEqual(b(), 14.5) // sum(10..19) / 10
     })
 
-    it('lift :: Signal s => ((a -> b -> ...) -> x) -> [s a, s b, ...] -> s x', function () {
+    it('lift :: Signal s => ((a -> b -> ...) -> x) -> s a -> s b -> ... -> s x', function () {
       const a = Signal.of()
       const b = Signal.of()
       const c = lift((a, b) => a + b, a, b)
