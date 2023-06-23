@@ -41,8 +41,8 @@ These operations can be used directly on signals (fluent interface) or preferabl
 
 ```javascript
 const a = Signal.of(3)
-	.map(x => x + 1)
-	.filter(x => x % 2 === 0)
+  .map(x => x + 1)
+  .filter(x => x % 2 === 0)
   .map(x => x * 2)
   .chain(Signal.of)
   .ap(Signal.of(x => x > 4))
@@ -67,7 +67,7 @@ a() // true
 
 #### Fineprint
 
-`undefined` (as apposed to `null`) is not considered a valid value for signals. We say a signal is undefined, when it holds `undefined` as its current value. Signals may start off undefined: `Signal.of()`, but once they have a valid value, there is no way back to undefined. 
+`undefined` (as apposed to `null`) is not considered a valid value for signals. We say a signal is undefined, when it holds `undefined` as its current value. Signals may start off undefined: `Signal.of()`, but once they have a valid value, there is no way back to undefined.
 
 ```javascript
 const a = Signal.of()
@@ -119,7 +119,7 @@ acc // [2] (d was evaluated once)
 a(3); acc // [2, 1] (d was evaluated once again)
 ```
 
-#### Why signals and not streams? 
+#### Why signals and not streams?
 
 In FRP, terms still seem a little fuzzy, maybe because there are. But one thing seems pretty clear: Streams don't have the notion of a *current value*, which can be queried at any given time. Thus we use the term signal. Signals (think of digital logic circuits), have discrete values which can and usually do vary over time. Also, we *link* one or more input signals to one output signal `const AND = link((a, b) => a && b, [a, b])`.
 
