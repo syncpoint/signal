@@ -79,7 +79,7 @@ a() // true
 
 #### Nested signals, reads, writes
 
-Although we advise against using functions with side-effects where possible, you can do so with Signals. Consider the following example. In link function of `b`, at label L0 `flag` in parent scope is updated to true. Updating `a` at L1 triggers the evaluation of `a`'s link function. Current value of `flag` is true during this evaluation. Control is only returned to L2 after all of `a`'s dependent links are evaluated and updated.
+Although we advise against using functions with side-effects where possible, you can do so with Signal. Consider the following example. In link function of `b`, at label L0 `flag` in parent scope is updated to true. Updating `a` at L1 triggers the evaluation of `a`'s link function. Current value of `flag` is true during this evaluation. Control is only returned to L2 after all of `a`'s dependent links are evaluated and updated.
 
 ```javascript
 const acc = []
