@@ -1,4 +1,5 @@
 {
+  "id": "64d00de7-2ead-42e9-8c63-16c82e3611ab",
   "name": "@syncpoint/signal",
   "version": "0.0.1",
   "description": "Algebraic type for time varying values",
@@ -6,9 +7,11 @@
     "type": "git",
     "url": "https://github.com/syncpoint/signal.git"
   },
-  "main": "lib/signal.js",
+  "main": "dist/index.js",
   "scripts": {
+    "prepare": "npm run build",
     "test": "mocha --recursive test/",
+    "build": "webpack",
     "coverage": "c8 -all --include 'lib/**/*' --reporter=html mocha --recursive test/"
   },
   "keywords": [
@@ -21,11 +24,12 @@
     "time-varying"
   ],
   "author": "horst.dehmer@syncpoint.io",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@babel/eslint-parser": "^7.21.8",
     "@babel/preset-env": "^7.22.4",
     "@babel/register": "^7.21.0",
+    "babel-loader": "^9.1.2",
     "c8": "^8.0.0",
     "eslint": "^8.41.0",
     "eslint-config-standard": "^17.1.0",
@@ -33,6 +37,9 @@
     "eslint-plugin-n": "^16.0.0",
     "eslint-plugin-promise": "^6.1.1",
     "mocha": "^10.2.0",
-    "ramda": "^0.29.0"
+    "ramda": "^0.29.0",
+    "terser-webpack-plugin": "^5.3.9",
+    "webpack": "^5.88.0",
+    "webpack-cli": "^5.1.4"
   }
 }
