@@ -12,11 +12,11 @@ But we can say what Signal is not: Signal is not a Web/GUI framework like Solid,
 
 #### History of Origins
 
-For one of our projects we had to extent a rather complex OpenLayers interaction to support custom geometries. Three attempts to extent the existing code failed. We figured that encapsulating a ton of mutable state in a single class was not the way we wanted to do business. We looked into alternative approaches to structure code and route and transform incoming mouse and keyboard events until they eventually updated the view model. The first implementation was based on [@most/core](https://github.com/mostjs/core) which worked out really nice. But the older I the author get, the more paranoid about project dependencies I become. @most/core seemed a little dormant, it is written in TypeScript (we are not huge fans of) and has some inherent complexity for features we don't need (async scheduling, time tracking). Maintaining @most/core if necessary was out of the question. Next [flyd](https://github.com/paldepind/flyd). Yes, an old-timer too, but simple enough. Migrating to flyd was as simple as it gets. No scheduler, synchronous updates and a relatively small JavaScript code base. In the end, flyd had some rough edges we liked to iron out and voilà, Signal came into being. 
+For one of our projects we had to extent a rather complex OpenLayers interaction to support custom geometries. Three attempts to extent the existing code failed. We figured that encapsulating a ton of mutable state in a single class was not the way we wanted to do business. We looked into alternative approaches to structure code and route and transform incoming mouse and keyboard events until they eventually updated the view model. The first implementation was based on [@most/core](https://github.com/mostjs/core) which worked out really nice. But the older I the author get, the more paranoid about project dependencies I become. @most/core seemed a little dormant, it is written in TypeScript (we are not huge fans of) and has some inherent complexity for features we don't need (async scheduling, time tracking). Maintaining @most/core if necessary was out of the question. Next [flyd](https://github.com/paldepind/flyd). Yes, an old-timer too, but simple enough. Migrating to flyd was as simple as it gets. No scheduler, synchronous updates and a relatively small JavaScript code base. In the end, flyd had some rough edges we liked to iron out and voilà, Signal came into being.
 
 #### Introduction
 
-Signal provides two primitives: *Simple signals* `Signal.of` and *linked signals* `signal.link`. Simple signals are just containers for a current value. One or more input signals can be linked to one output signal. The link function derives the output value from the input values. The output signal's value is automatically updated when at least one input signal's value has changed.
+Signal provides two primitives: *Simple signals* `Signal.of` and *linked signals* `Signal.link`. Simple signals are just containers for a current value. One or more input signals can be linked to one output signal. The link function derives the output value from the input values. The output signal's value is automatically updated when at least one input signal's value has changed.
 
 ```javascript
 const sum = (a, b) => a + b
@@ -235,7 +235,7 @@ Streams don't have the notion of a *current value*, which can be queried at any 
 
 #### Miscellaneous Operators
 
-The following operators live under the Signal namespace and might be handy or they might not. There is no real reason to include them in this library, except that we use them for a different project. These operators can all be implemented with a few lines of code and only use the public API introduced so far. 
+The following operators live under the Signal namespace and might be handy or they might not. There is no real reason to include them in this library, except that we use them for a different project. These operators can all be implemented with a few lines of code and only use the public API introduced so far.
 
 `fromListeners` was already mentioned above.
 
@@ -300,5 +300,3 @@ const fn = R.compose(
 const a = fn(Signal.of(1))
 a() // 2
 ```
-
-
