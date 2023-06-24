@@ -2,6 +2,18 @@
 
 Time-varying values with acyclic static dependencies and synchronous glitch-free updates. **Signal** is heavily inspired by and in many aspects quite similar to [flyd](https://github.com/paldepind/flyd). Our thanks and appreciation go out to the people who provided this neat piece of software. Thank you guys!
 
+#### Motivation
+
+Signal falls in the broad spectrum of Functional Reactive Programming (FRP). We think FRP is not a fancy hammer (sorry: technology) which solves each and every problem. It's rather a different way to think about certain problems and derive solutions which posses properties common to functional programming in general. We are not here to argue whether or not FP might have its benefits over imperative paradigm. We simply offer a small abstraction which might be useful to you in certain circumstances.
+
+Signal is one of many packages out there to choose from. Some of them are Methusalems pathing the FRP way starting nearly a decade ago. Some are feature-packed Swiss Army knives for nearly every conceivable use case. Some are heavy, some are light. Some are abandoned, some are actively maintained. It's hard to layout a map of FRP-Land and it's even harder to pin-point the exact location where package XY sits.
+
+But we can say what Signal is not: Signal is not a Web/GUI framework like Solid, Vue or the likes. Signal is not RxJS. Signal is not an application state management framework like Redux or MobX. Signal is not a framework at all. Signal is just signals.
+
+#### History of Origins
+
+For one of our projects we had to extent a rather complex OpenLayers interaction to support custom geometries. Three attempts to extent the existing code failed. We figured that encapsulating a ton of mutable state in a single class was not the way we wanted to do business. We looked into alternative approaches to structure code and route and transform incoming mouse and keyboard events until they eventually updated the view model. The first implementation was based on [@most/core](https://github.com/mostjs/core) which worked out really nice. But the older I the author get, the more paranoid about project dependencies I become. @most/core seemed a little dormant, it is written in TypeScript (we are not huge fans of) and has some inherent complexity for features we don't need (async scheduling, time tracking). Maintaining @most/core if necessary was out of the question. Next [flyd](https://github.com/paldepind/flyd). Yes, an old-timer too, but simple enough. Migrating to flyd was as simple as it gets. No scheduler, synchronous updates and a relatively small JavaScript code base. In the end, flyd had some rough edges we liked to iron out and voilà, Signal came into being. 
+
 #### Introduction
 
 Signal provides two primitives: *Simple signals* `Signal.of` and *linked signals* `signal.link`. Simple signals are just containers for a current value. One or more input signals can be linked to one output signal. The link function derives the output value from the input values. The output signal's value is automatically updated when at least one input signal's value has changed.
@@ -105,7 +117,7 @@ const b = link(a => {
 b() // 4
 ```
 
-And, finally, signals can be passed around like ordinary values (which they are). Let's see how a full adder might be patched together with some logical gates.
+And finally, signals can be passed around like ordinary values (which they are). Let's see how a full adder might be patched together with some logical gates.
 
 ```javascript
 const toString = radix => s => s.toString(radix)
@@ -290,5 +302,3 @@ a() // 2
 ```
 
 
-
-To be continued...
