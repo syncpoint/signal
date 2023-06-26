@@ -20,15 +20,29 @@ const stream = flyd.stream;
 const combine = flyd.combine;
 const map = flyd.map;
 const chain = flyd.chain;
-const ap = flyd.ap;
 
+// Reverse parameter order ('old ap').
+const ap = a => b => flyd.ap(b, a)
+
+// NeoVance/flyd (fork)
+const slice = Array.prototype.slice
+const concat = Array.prototype.concat
+function curryN(n, func) {
+  return function() {
+    var args = slice.call(arguments)
+    if (args.length >= n) return func.apply(null, args)
+    else return curryN(n - args.length, function() {
+      return func.apply(null, concat.call(args, slice.call(arguments)))
+    })
+  }
+}
 
 // Some combinators
 function doubleFn(x) { return x * 2; }
 function sumFn(x, y) { return x + y; }
 function identityLift(x) { return x; }
 
-describe.only('stream', function() {
+describe('stream', function() {
   it('[ec41] can be set with initial value', function() {
     var s = stream(12);
     assert.equal(s(), 12);
@@ -474,7 +488,7 @@ describe.only('stream', function() {
   });
 
   describe('scan', function() {
-    it.skip('[457c - failing] has initial acc as value when stream is undefined', function() {
+    it.skip('[457c - debatable] has initial acc as value when stream is undefined', function() {
       var numbers = stream();
       var sum = flyd.scan(function(sum, n) {
         return sum + n;
@@ -574,7 +588,7 @@ describe.only('stream', function() {
   });
 
   describe('ap', function() {
-    it.skip('[2c93 - failing] applies functions in stream', function() {
+    it('[2c93] applies functions in stream', function() {
       var a = stream(function(x) { return 2 * x; });
       var v = stream(3);
       var s = a.pipe(ap(v));
@@ -584,7 +598,7 @@ describe.only('stream', function() {
       v(9);
       assert.equal(s(), 3);
     });
-    it.skip('[42ce - failing] is compositive', function() {
+    it('[42ce] is compositive', function() {
       var a = stream(function(x) { return x * 2; });
       var u = stream(function(x) { return x + 5; });
       var v = stream(8);
@@ -611,9 +625,9 @@ describe.only('stream', function() {
       assert.equal(s1(), 12);
       assert.equal(s2(), 12);
     });
-    it.skip('[bdfd - failing] supports neat ap pattern', function() {
+    it('[bdfd] supports neat ap pattern', function() {
       var result = [];
-      var sumThree = flyd.curryN(3, function(x, y, z) {
+      var sumThree = curryN(3, function(x, y, z) {
         return x + y + z;
       });
       var s1 = stream(0);
@@ -624,9 +638,9 @@ describe.only('stream', function() {
       s1(3); s2(2); s3(5);
       assert.deepEqual(result, [0, 3, 5, 10]);
     });
-    it.skip('[4585 - unsupported] applies functions if streams have no initial value', function() {
+    it('[4585] applies functions if streams have no initial value', function() {
       var result = [];
-      var add = flyd.curryN(2, function(x, y) { return x + y; });
+      var add = curryN(2, function(x, y) { return x + y; });
       var numbers1 = stream();
       var numbers2 = stream();
       var addToNumbers1 = flyd.map(add, numbers1);
