@@ -117,7 +117,7 @@ const b = link(a => {
 b() // 4
 ```
 
-And finally, signals can be passed around like ordinary values (which they are). The following example is a 16-bit ripple-carry adder using full adders (2 x XOR, 2 x AND, 1 x OR).
+And finally, signals can be passed around like ordinary values (which they are). The following example is a 16-bit ripple-carry adder using full adders (2 x XOR, 2 x AND, 1 x OR). That's a grand total of 113 signals.
 
 ```javascript
 import * as R from 'ramda'
