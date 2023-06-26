@@ -117,43 +117,42 @@ const b = link(a => {
 b() // 4
 ```
 
-And finally, signals can be passed around like ordinary values (which they are). Let's see how a full adder might be patched together with some logical gates.
+And finally, signals can be passed around like ordinary values (which they are). The following example is a 16-bit ripple-carry adder using full adders (2 x XOR, 2 x AND, 1 x OR).
 
 ```javascript
+import * as R from 'ramda'
+
+const xor = R.unapply(link((a, b) => a ^ b))
+const and = R.unapply(link((a, b) => a & b))
+const or = R.unapply(link((a, b) => a | b))
 const toString = radix => s => s.toString(radix)
 const padStart = (length, pad) => s => s.padStart(length, pad)
 const split = separator => s => s.split(separator)
-const binary = R.compose(
-  R.map(Number), split(''), padStart(3, '0'), toString(2)
+const decode = xs => parseInt(xs.reverse().join(''), 2)
+const encode = R.compose(
+  R.reverse, R.map(Number), split(''), padStart(16, '0'), toString(2)
 )
 
-const XOR = R.unapply(link((a, b) => a ^ b))
-const AND = R.unapply(link((a, b) => a & b))
-const OR = R.unapply(link((a, b) => a | b))
-
-const FULL_ADDER = ([a, b, c_in]) => {
-  const x = XOR(a, b)
-  const y = AND(x, c_in)
-  const z = AND(a, b)
-  const s = XOR(x, c_in)
-  const c_out = OR(y, z)
-  return [s, c_out]
+const fullAdder = ([a, b, cin]) => {
+  const x = xor(a, b)
+  const s = xor(x, cin)
+  const cout = or(and(x, cin), and(a, b))
+  return [s, cout]
 }
 
-const inputs = R.times(() => Signal.of(), 3)
+const parallelAdder = cin => R.range(0, 16).reduce(acc => {
+  const ab = [Signal.of(), Signal.of()]
+  const [s, cout] = fullAdder([...ab, acc.cout])
+  acc.a.push(ab[0]); acc.b.push(ab[1]); acc.s.push(s)
+  acc.cout = cout // c_in of next adder is c_out of previous adder
+  return acc
+}, { a: [], b: [], s: [], cout: cin }) // a, b, s: 16-bits each
 
-link(
-  (...xs) => console.log(xs),
-  [...inputs, ...FULL_ADDER(inputs)]
-)
-
-R.range(0, 8)
-  .map(binary)
-  .flatMap(values => R.zip(inputs, values))
-  .forEach(([fn, v]) => fn(v))
+const { a, b, s, cout } = parallelAdder(Signal.of(0))
+encode(47813).forEach((v, i) => a[i](v))
+encode(19987).forEach((v, i) => b[i](v))
+decode([...s.map(s => s()), cout()]) // 67800
 ```
-
-In the preceding example, signals are passed between different functions. Can you spot the locations?
 
 #### Fine-print: `undefined`
 
