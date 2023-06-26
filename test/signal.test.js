@@ -26,6 +26,13 @@ const expectError = (fn, message) => {
   }
 }
 
+const counter = () => {
+  let counter = 0
+  const inc = () => (counter += 1)
+  inc.actual = () => counter
+  return inc
+}
+
 describe('Interface Specification', function () {
   ;[
     ['null', null],
@@ -114,9 +121,9 @@ describe('Interface Specification', function () {
       // Check production is only evaluated when all inputs are defined.
       it(`Evaluation count/of (${label}) (${values})`, function () {
         const inputs = Array.isArray(values) ? values.map(Signal.of) : Signal.of(values)
-        let actual = 0 // evaluation count
-        link(() => (actual += 1), inputs)
-        assert.strictEqual(actual, expected)
+        const count = counter()
+        link(count, inputs)
+        assert.strictEqual(count.actual(), expected)
       })
     })
 
@@ -133,11 +140,11 @@ describe('Interface Specification', function () {
       // Check production is only evaluated when at least on input changed.
       const format = x => x === undefined ? 'undefined' : x
       it(`Evaluation count/set (${label}) (${initial.map(format)}) <- (${next.map(format)})`, function () {
+        const count = counter()
         const inputs = initial.map(Signal.of) // 1
-        let actual = 0 // evaluation count (including initial)
-        link(() => (actual += 1), inputs) // 2
+        link(count, inputs) // 2
         next.forEach((value, i) => inputs[i](value))
-        assert.strictEqual(actual, expected)
+        assert.strictEqual(count.actual(), expected)
       })
     })
 
@@ -146,12 +153,32 @@ describe('Interface Specification', function () {
       [1, 2]
     ].forEach(([initial, expected]) => {
       it(`Evaluation count/set [diamond] (${initial})`, function () {
-        let actual = 0 // evaluation count (including initial)
-        const inc = () => (actual += 1)
+        const count = counter()
         const input = Signal.of(initial)
-        diamond(inc, input)
-        input(2); assert.strictEqual(actual, expected)
+        diamond(count, input)
+        input(2); assert.strictEqual(count.actual(), expected)
       })
+    })
+
+    it('Evaluation count/set (1-ary) [indirect]', function () {
+      // Check indirect link `c` is only evaluated when `b` changed.
+      const count = counter()
+      const a = Signal.of()
+      const b = a.map(a => Math.ceil(a / 2), a)
+      link(count, b)
+      R.range(1, 7).forEach(a)
+      assert.strictEqual(count.actual(), 3) // a ∈ (1, 3, 5)
+    })
+
+    it('Evaluation count/set (2-ary) [indirect]', function () {
+      // Check indirect link `c` is only evaluated when `b` changed.
+      const count = counter()
+      const a = Signal.of(2)
+      const b = Signal.of(5)
+      const c = link((a, b) => Math.abs(a) + Math.abs(b), [a, b])
+      link(count, c)
+      a(-2); b(-5)
+      assert.strictEqual(count.actual(), 1)
     })
 
     ;[
@@ -191,7 +218,7 @@ describe('Interface Specification', function () {
       input(2); assert.strictEqual(output(), 7)
     })
 
-    it('evaluation order = definition order', function () {
+    it('Evaluation order = definition order', function () {
       const actual = []
       const push = label => x => actual.push(`${label}:${x}`)
       const input = Signal.of(1)

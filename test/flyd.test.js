@@ -230,11 +230,10 @@ describe('stream', function() {
         order.push(1);
         return y;
       }, [y]);
-      console.log(order)
       assert.equal(order[0], 1);
       assert.equal(order[1], 2);
     });
-    it.skip('[4799 - failing] can filter values', function() {
+    it('[4799] can filter values', function() {
       var result = [];
       var n = stream(0);
       var lrg5 = combine(function(n) {
@@ -242,7 +241,6 @@ describe('stream', function() {
       }, [n]);
       flyd.map(function(v) { result.push(v); }, lrg5);
       n(4)(6)(2)(8)(3)(4);
-      console.log('result', result)
       assert.deepEqual(result, [6, 8]);
     });
     it('[ae90] can set another stream\'s value multiple times from inside a stream', function() {
@@ -867,8 +865,8 @@ describe('stream', function() {
     });
 
     it.skip('[eb16 - failing] old ap', function() {
-      var s = stream(R.add(3))
-        .ap(stream(3));
+      // wrong/old signal order: Signal s => s (a -> b) -> s a -> s b
+      var s = stream(R.add(3)).ap(stream(3));
       assert.equal(s(), 6);
     });
 
