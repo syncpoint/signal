@@ -291,7 +291,7 @@ describe('Interface Specification', function () {
       assert.deepStrictEqual(actual, expected)
     })
 
-    it('unnamed [40c9]', function () {
+    it('[40c9] unnamed', function () {
       const a = Signal.of()
       const b = link(a => a + 1, a)
       const c = link((a, b) => a * b, [a, b])
@@ -310,7 +310,7 @@ describe('Interface Specification', function () {
   })
 
   describe('Fantasy Land', function () {
-    it('map :: Signal s => (a -> b) -> s a -> s b [2d75]', function () {
+    it('[2d75] map :: Signal s => (a -> b) -> s a -> s b', function () {
       const a = Signal.of()
       const b = R.map(x => x * 2, a)
       assert.strictEqual(b(), undefined)
@@ -318,7 +318,7 @@ describe('Interface Specification', function () {
       a(2); assert.strictEqual(b(), 4)
     })
 
-    it('map :: Signal s => (a -> b) -> s a -> s b [af73]', function () {
+    it('[af73] map :: Signal s => (a -> b) -> s a -> s b', function () {
       const a = Signal.of(1)
         .map(x => x * 2)
         .map(x => x + 1)
@@ -356,7 +356,7 @@ describe('Interface Specification', function () {
       a(2); assert.strictEqual(b(), 6)
     })
 
-    it('chain :: Signal s => (a -> s b) -> s a -> s b [3646]', async function () {
+    it('[3646] chain :: Signal s => (a -> s b) -> s a -> s b', async function () {
       const expected = [42]
       const input = Signal.of()
       const output = input.chain(() => R.tap(s => expected.forEach(s), Signal.of()))
@@ -366,14 +366,14 @@ describe('Interface Specification', function () {
       input('go!'); assert.deepStrictEqual(actual, expected)
     })
 
-    it('chain :: Signal s => (a -> s b) -> s a -> s b [4ae4]', async function () {
+    it('[4ae4] chain :: Signal s => (a -> s b) -> s a -> s b', async function () {
       const expected = 42
       const main = Signal.of(expected)
       const output = main.chain(v => Signal.of(v))
       assert.deepStrictEqual(output(), expected)
     })
 
-    it('chain :: Signal s => (a -> s b) -> s a -> s b [9cc4]', async function () {
+    it('[9cc4] chain :: Signal s => (a -> s b) -> s a -> s b', async function () {
       // Preserve ordering.
       const input = Signal.of()
       const a = Signal.of()
@@ -406,7 +406,7 @@ describe('Interface Specification', function () {
   })
 
   describe('miscellaneous operators', function () {
-    it('startWith :: Signal s => a -> s a -> s a [ae26]', function () {
+    it('[ae26] startWith :: Signal s => a -> s a -> s a', function () {
       // Initial value if signal is undefined.
       const a = Signal.of()
       const b = startWith(0, a)
@@ -414,7 +414,7 @@ describe('Interface Specification', function () {
       a(1); assert.strictEqual(b(), 1)
     })
 
-    it('startWith :: Signal s => (() -> a) -> s a -> s a [46de]', function () {
+    it('[46de] startWith :: Signal s => (() -> a) -> s a -> s a', function () {
       // Initial value (from function) if signal is undefined.
       const a = Signal.of()
       const b = startWith(() => 0, a)
@@ -422,7 +422,7 @@ describe('Interface Specification', function () {
       a(1); assert.strictEqual(b(), 1)
     })
 
-    it('startWith :: Signal s => a -> s a -> s a [46de]', function () {
+    it('[46de] startWith :: Signal s => a -> s a -> s a', function () {
       // Initial value for linked signal.
       const a = Signal.of()
       const b = link(a => a + 1, [a])
@@ -431,7 +431,7 @@ describe('Interface Specification', function () {
       a(1); assert.strictEqual(c(), 2)
     })
 
-    it('startWith :: Signal s => a -> s a -> s a [b308]', function () {
+    it('[b308] startWith :: Signal s => a -> s a -> s a', function () {
       // Initial value is ignored if signal is defined.
       const a = Signal.of(1)
       const b = startWith(0, a)

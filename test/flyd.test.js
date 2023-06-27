@@ -269,7 +269,7 @@ describe('stream', function() {
       b(1);
       assert.deepEqual(result, [1, 2]);
     });
-    it.skip('[afec - unsupported]can combine streams and project deps as args', function() {
+    it.skip('[afec - unsupported] can combine streams and project deps as args', function() {
       var a = flyd.stream();
       var b = flyd.stream(0);
       var collect = function(x, y, self) { return (self() || []).concat([x(), y()]); };
@@ -376,7 +376,7 @@ describe('stream', function() {
       x(1);
       assert.equal(doubleX(), 2);
     });
-    it.skip('[2b43 - unsupported] handles function returning undefined', function() {
+    it.skip('[2b43 - incompatible] handles function returning undefined', function() {
       var x = stream(1);
       var maybeDoubleX = flyd.map(function(x) {
         return x > 3 ? 2 * x : undefined;
@@ -554,7 +554,7 @@ describe('stream', function() {
       s1(12)(2); s2(4)(44); s1(1); s2(12)(2);
       assert.deepEqual(result, [12, 2, 4, 44, 1, 12, 2]);
     });
-    it.skip('[8ed3 - undefined] should pass defined undefined along', function() {
+    it.skip('[8ed3 - incompatible] should pass defined undefined along', function() {
       var s1 = stream();
       var s2 = stream(undefined);
       var merged = flyd.merge(s1, s2);
