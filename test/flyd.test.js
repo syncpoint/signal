@@ -5,7 +5,17 @@ const Signal = require('../lib/signal').default
 
 // Compatibility
 const flyd = {
-  stream: Signal.of,
+  stream: v => {
+    const signal = Signal.of(v)
+
+    // `of :: a -> Signal a` should probably be
+    // limited to type representative `Signal`.
+    // But what the heck? We want to see happy test cases!
+    // 263c, 4cab, 81df, 10a7 and 4727.
+    signal.of =
+    signal['fantasy-land/of'] = signal.constructor.of
+    return signal
+  },
   on: (fn, signal) => Signal.link(fn, signal),
   isStream: Signal.isSignal,
   combine: Signal.link,
@@ -202,7 +212,7 @@ describe('stream', function() {
       assert.equal(setAndSum(), 7);
       assert.equal(doubleX(), 6);
     });
-    it.skip('[9861 - failing: different execution order] executes to the end before handlers are triggered', function() {
+    it.skip('[9861 - incompatible] executes to the end before handlers are triggered', function() {
       var order = [];
       var x = stream(4);
       var y = stream(3);
@@ -217,7 +227,7 @@ describe('stream', function() {
       }, [y]);
       assert.deepEqual(order, [1, 2]);
     });
-    it.skip('[0eeb - failing: different execution order] with static deps executes to the end', function() {
+    it.skip('[0eeb - incompatible] with static deps executes to the end', function() {
       var order = [];
       var x = stream(4);
       var y = stream(3);
@@ -650,7 +660,7 @@ describe('stream', function() {
   });
 
   describe('of', function() {
-    it.skip('[ba11 - failing] can be accessed through the constructor property', function() {
+    it('[ba11] can be accessed through the constructor property', function() {
       var s1 = stream(2);
       var s2 = s1.constructor.of(3);
       var s3 = s2.constructor['fantasy-land/of'](3);
@@ -658,24 +668,24 @@ describe('stream', function() {
       assert.equal(s2(), 3);
       assert.equal(s3(), 3);
     });
-    it.skip('[263c - unsupported]returns a stream with the passed value', function() {
+    it('[263c] returns a stream with the passed value', function() {
       var s1 = stream(2);
       var s2 = s1.of(3);
       assert.equal(s2(), 3);
     });
-    it.skip('[4cab - unsupported] has identity', function() {
+    it('[4cab] has identity', function() {
       var a = stream();
       var id = function(a) { return a; };
       var v = stream(12);
       assert.equal(a.of(id).pipe(ap(v))(), v());
     });
-    it.skip('[81df - unsupported] is homomorphic', function() {
+    it('[81df] is homomorphic', function() {
       var a = stream(0);
       var f = function(x) { return 2 * x; };
       var x = 12;
       assert.equal(a.of(f).pipe(ap(a.of(x)))(), a.of(f(x))());
     });
-    it.skip('[10a7 - unsupported] is interchangeable', function() {
+    it('[10a7] is interchangeable', function() {
       var y = 7;
       var a = stream();
       var u = stream()(function(x) { return 3 * x; });
@@ -725,7 +735,7 @@ describe('stream', function() {
       s1(1)(2)(4)(6);
       assert.deepEqual(result, [3, 6, 12, 18]);
     });
-    it.skip('[52cf -unsupported] creates new stream with filter applied', function() {
+    it.skip('[52cf - unsupported] creates new stream with filter applied', function() {
       var result = [];
       var s1 = stream();
       var tx = R.pipe(
@@ -860,12 +870,13 @@ describe('stream', function() {
     it('ap [9a4b]', function() {
       var s = stream(R.add(3));
       var val = stream(3);
+      // ap applies a signal of functions to a signal of values.
+      // ap :: Signal s => Signal (a → b) → a → b
       var applied = R.ap(s, val);
       assert.equal(applied(), 6);
     });
 
-    it.skip('[eb16 - failing] old ap', function() {
-      // wrong/old signal order: Signal s => s (a -> b) -> s a -> s b
+    it.skip('[eb16 - incompatible] old ap', function() {
       var s = stream(R.add(3)).ap(stream(3));
       assert.equal(s(), 6);
     });
