@@ -867,7 +867,7 @@ describe('stream', function() {
       assert.equal(s(), 1);
     });
 
-    it('ap [9a4b]', function() {
+    it('[9a4b] ap', function() {
       var s = stream(R.add(3));
       var val = stream(3);
       // ap applies a signal of functions to a signal of values.
