@@ -68,7 +68,7 @@ describe('stream', function() {
     var s = stream();
     assert.equal(s, s(23));
   });
-  it.skip('[8a4a - unsupported] can works with JSON.stringify', function() {
+  it('[8a4a] can works with JSON.stringify', function() {
     var obj = {
       num: stream(23),
       str: stream('string'),
@@ -84,7 +84,7 @@ describe('stream', function() {
     var jsonObject = JSON.parse(JSON.stringify(obj));
     assert.deepEqual(jsonObject, expected_outcome);
   });
-  it.skip("[2b2d - unsupported] let's explicit `undefined` flow down streams", function() {
+  it.skip("[2b2d - incompatible] let's explicit `undefined` flow down streams", function() {
     var result = [];
     var s1 = stream(undefined);
     flyd.map(function(v) { result.push(v); }, s1);
@@ -104,7 +104,7 @@ describe('stream', function() {
     assert(flyd.isStream(s3));
     assert(!flyd.isStream(f));
   });
-  it.skip('[8249 - unsupported] has pretty string representation', function() {
+  it('[8249] has pretty string representation', function() {
     var ns = stream(1);
     var ss = stream('hello');
     var os = stream({});
@@ -520,7 +520,7 @@ describe('stream', function() {
       numbers(3)(2)(4)(10);
       assert.equal(sum(), 19);
     });
-    it.skip('[41f4 - unsupported] passes undefined', function() {
+    it.skip('[41f4 - incompatible] passes undefined', function() {
       var x = stream();
       var scan = flyd.scan(function(acc, x) {
         return acc.concat([x]);
