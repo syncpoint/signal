@@ -176,20 +176,18 @@ a(4); b() // 6 (unchanged)
 a(1); b() // 2
 ```
 
-As a consequence, linked signals are only evaluated, if all input signals are defined. Signals are also only updated when the new value is different from the current value.
+As a consequence, linked signals are only evaluated, if all input signals are defined. 
 
 ```javascript
 const acc = []
 const push = x => acc.push(x)
 
-const a = Signal.of(1)
+const a = Signal.of()
 link(push, a)
 
-acc // [1]
-a(2); acc // [1, 2]
-a(2); a(2); acc // [1, 2] // (unchanged)
-a(3); a(3); acc // [1, 2, 3]
-a(1); acc // [1, 2, 3, 1]
+acc // [] (not evaluated, yet)
+a(1); a(1); acc // [1, 1]
+a(2); acc // [1, 1, 2]
 ```
 
 #### Fine-print: Glitch-free
@@ -299,3 +297,16 @@ const fn = R.compose(
 const a = fn(Signal.of(1))
 a() // 2
 ```
+
+`skipRepeats` filters consecutive values that are equal. This operator has two forms. The second form accepts a custom function for equality checks ( `===` being the default check.)
+
+```javascript
+// skipRepeats :: Signal s => s a -> s a
+// skipRepeats :: Signal s => (a -> a -> Boolean) -> s a -> s a
+const a = Signal.of(1)
+const b = skipRepeats(a)
+const c = scan((acc, x) => [...acc, x], [], b)
+;[1, 1, 1, 2, 2, 1, 3].forEach(a)
+c() // [1, 2, 1, 3]
+```
+

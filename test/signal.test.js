@@ -6,7 +6,7 @@ import Signal from '../lib/signal'
 const {
   isDefined, isSignal,
   link, chain, startWith, scan, tap, loop, lift,
-  fromListeners
+  fromListeners, skipRepeats
 } = Signal
 
 const hasValue = (x, v) =>
@@ -26,6 +26,7 @@ const expectError = (fn, message) => {
   }
 }
 
+// TODO: replace by Signal.scan/Signal.merge(All)
 const counter = () => {
   let counter = 0
   const inc = () => (counter += 1)
@@ -129,13 +130,13 @@ describe('Interface Specification', function () {
 
     ;[
       ['1-ary', [undefined], [0], 1],
-      ['1-ary', [1], [1], 1],
+      ['1-ary', [1], [1], 2], // [*] setting same value updates signal
       ['1-ary', [1], [2], 2],
       ['2-ary', [undefined, undefined], [1, undefined], 0],
       ['2-ary', [undefined, undefined], [1, 2], 1],
-      ['2-ary', [1, 2], [1, 2], 1],
-      ['2-ary', [1, 2], [1, 3], 2],
-      ['2-ary', [1, 2], [2, 3], 3] // TODO: do we need batching for updates?
+      ['2-ary', [1, 2], [1, 2], 3], // [*]
+      ['2-ary', [1, 2], [1, 3], 3],
+      ['2-ary', [1, 2], [2, 3], 3] // [*]
     ].forEach(([label, initial, next, expected]) => {
       // Check production is only evaluated when at least on input changed.
       const format = x => x === undefined ? 'undefined' : x
@@ -158,27 +159,6 @@ describe('Interface Specification', function () {
         diamond(count, input)
         input(2); assert.strictEqual(count.actual(), expected)
       })
-    })
-
-    it('Evaluation count/set (1-ary) [indirect]', function () {
-      // Check indirect link `c` is only evaluated when `b` changed.
-      const count = counter()
-      const a = Signal.of()
-      const b = a.map(a => Math.ceil(a / 2), a)
-      link(count, b)
-      R.range(1, 7).forEach(a)
-      assert.strictEqual(count.actual(), 3) // a ∈ (1, 3, 5)
-    })
-
-    it('Evaluation count/set (2-ary) [indirect]', function () {
-      // Check indirect link `c` is only evaluated when `b` changed.
-      const count = counter()
-      const a = Signal.of(2)
-      const b = Signal.of(5)
-      const c = link((a, b) => Math.abs(a) + Math.abs(b), [a, b])
-      link(count, c)
-      a(-2); b(-5)
-      assert.strictEqual(count.actual(), 1)
     })
 
     ;[
@@ -530,6 +510,30 @@ describe('Interface Specification', function () {
       ]
 
       assert.deepStrictEqual(actual, expected)
+    })
+
+    it('skipRepeats :: Signal s => s a -> s a', function () {
+      const a = Signal.of(1)
+      const b = skipRepeats(a)
+      const count = scan(acc => acc + 1, 0, b)
+      ;[1, 1, 1, 2, 1, 3].forEach(a)
+      assert.strictEqual(count(), 4)
+    })
+
+    it('skipRepeats :: Signal s => (a -> a -> Boolean) -> s a -> s a', function () {
+      const eq = (a, b) => a.revision === b.revision
+      const a = Signal.of()
+      const b = skipRepeats(eq, a)
+      const count = scan(acc => acc + 1, 0, b)
+      ;[
+        { revision: 1, data: 'xyz' },
+        { revision: 1, data: '---' },
+        { revision: 1, data: 'abc' },
+        { revision: 2, data: 'abc' },
+        { revision: 2, data: 'abc' }
+      ].forEach(a)
+
+      assert.strictEqual(count(), 2)
     })
   })
 })

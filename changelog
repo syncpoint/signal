@@ -1,0 +1,6 @@
+0.0.1:
+* initial released version
+
+1.0.0:
+* updating a signal with same as current value is no longer ignored
+* new operator: skipRepeats
