@@ -37,6 +37,20 @@ const c = link(b => b * 2, b)
 c() // 4
 ```
 
+Side-effects can be triggered with `Signal.on`. The side-effect function is invoked every time the signal value changes. `Signal.on` returns a function which, when called, removes the effect from the signal's dependent list, so it is no longer called.
+
+```javascript
+const a = Signal.of()
+const acc = []
+const push = x => acc.push(x)
+
+// Hint: a.on(fn) is the same as Signal.on(fn, a)
+const dispose = a.on(push)
+a(1); a(2); acc // [1, 2]
+dispose()
+a(3); acc // [1, 2] (unchanged)
+```
+
 And really, that's all there is to know. Except...
 
 #### Signals are Monads

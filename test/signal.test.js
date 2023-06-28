@@ -88,7 +88,7 @@ describe('Interface Specification', function () {
     })
   })
 
-  it('on :: Signal s => (a -> *) -> s a', function () {
+  it('on :: Signal s => (a -> *) -> s a -> (() -> Unit)', function () {
     const acc = []
     const push = x => acc.push(x)
     const a = Signal.of(2)
