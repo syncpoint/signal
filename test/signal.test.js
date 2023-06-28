@@ -88,6 +88,16 @@ describe('Interface Specification', function () {
     })
   })
 
+  it('on :: Signal s => (a -> *) -> s a', function () {
+    const acc = []
+    const push = x => acc.push(x)
+    const a = Signal.of(2)
+    const dispose = a.on(push)
+    a(3); dispose()
+    a(4); a(5) // ignored after disposing effect.
+    assert.deepStrictEqual(acc, [2, 3])
+  })
+
   describe('[TypeError] link :: Signal s => (...[any] -> b) -> [s any] -> s b', function () {
     [
       [undefined, undefined, '"fn" is undefined'],
