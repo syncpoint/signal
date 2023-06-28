@@ -2,6 +2,24 @@
 
 Time-varying values with acyclic static dependencies and synchronous glitch-free updates. **Signal** is heavily inspired by and in many aspects quite similar to [flyd](https://github.com/paldepind/flyd). Our thanks and appreciation go out to the people who provided this neat piece of software. Thank you guys!
 
+#### Quickstart
+
+```bash
+npm install @syncpoint/signal
+npm install ramda # optional
+```
+
+```javascript
+import Signal from '@syncpoint/signal'
+// const Signal = require('@syncpoint/signal').default
+const a = Signal.of(3)
+const b = Signal.of(2)
+const c = Signal.link((a, b) => a * b, [a, b])
+b(4) // 12
+```
+
+BTW: Signal has **no** runtime dependencies.
+
 #### Motivation
 
 Signal falls in the broad spectrum of Functional Reactive Programming (FRP). We think FRP is not a fancy hammer (sorry: technology) which solves each and every problem. It's rather a different way to think about certain problems and derive solutions which posses properties common to functional programming in general. We are not here to argue whether or not FP might have its benefits over imperative paradigm. We simply offer a small abstraction which might be useful to you in certain circumstances.
@@ -190,7 +208,7 @@ a(4); b() // 6 (unchanged)
 a(1); b() // 2
 ```
 
-As a consequence, linked signals are only evaluated, if all input signals are defined. 
+As a consequence, linked signals are only evaluated, if all input signals are defined.
 
 ```javascript
 const acc = []
