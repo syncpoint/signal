@@ -9,3 +9,5 @@
 1.1.0
 * got rid of global state (evaluation stack)
 * now using topological sort to order dependent signals
+* streamlined code
+* improved/simplified test code
