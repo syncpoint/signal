@@ -5,3 +5,7 @@
 * signal update with same as current value is now possible
 * new operator: skipRepeats
 * Signal.on: disposable side-effect
+
+1.1.0
+* got rid of global state (evaluation stack)
+* now using topological sort to order dependent signals
