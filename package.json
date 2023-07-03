@@ -1,7 +1,7 @@
 {
   "id": "64d00de7-2ead-42e9-8c63-16c82e3611ab",
   "name": "@syncpoint/signal",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Algebraic type for time varying values",
   "repository": {
     "type": "git",

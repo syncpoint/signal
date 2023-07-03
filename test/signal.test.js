@@ -26,12 +26,10 @@ const expectError = (fn, message) => {
   }
 }
 
-// TODO: replace by Signal.scan/Signal.merge(All)
-const counter = () => {
-  let counter = 0
-  const inc = () => (counter += 1)
-  inc.actual = () => counter
-  return inc
+const recorder = inputs => {
+  const acc = []
+  link((...values) => acc.push(values.join(':')), inputs)
+  return () => acc
 }
 
 describe('Interface Specification', function () {
@@ -122,53 +120,66 @@ describe('Interface Specification', function () {
     })
 
     ;[
-      ['1-ary', [undefined], 0],
-      ['1-ary', [1], 1],
-      ['1-ary', 1, 1], // single signal, no array
-      ['2-ary', [undefined, undefined], 0],
-      ['2-ary', [1, undefined], 0],
-      ['2-ary', [1, 2], 1]
+      ['1-ary', [undefined], []],
+      ['1-ary', [1], ['1']],
+      ['1-ary', 1, ['1']], // single signal, no array
+      ['2-ary', [undefined, undefined], []],
+      ['2-ary', [1, undefined], []],
+      ['2-ary', [1, 2], ['1:2']]
     ].forEach(([label, values, expected]) => {
       // Check production is only evaluated when all inputs are defined.
       it(`Evaluation count/of (${label}) (${values})`, function () {
         const inputs = Array.isArray(values) ? values.map(Signal.of) : Signal.of(values)
-        const count = counter()
-        link(count, inputs)
-        assert.strictEqual(count.actual(), expected)
+        const actual = recorder(inputs)
+        assert.deepStrictEqual(actual(), expected)
       })
     })
 
     ;[
-      ['1-ary', [undefined], [0], 1],
-      ['1-ary', [1], [1], 2], // [*] setting same value updates signal
-      ['1-ary', [1], [2], 2],
-      ['2-ary', [undefined, undefined], [1, undefined], 0],
-      ['2-ary', [undefined, undefined], [1, 2], 1],
-      ['2-ary', [1, 2], [1, 2], 3], // [*]
-      ['2-ary', [1, 2], [1, 3], 3],
-      ['2-ary', [1, 2], [2, 3], 3] // [*]
+      ['1-ary', [undefined], [0], ['0']],
+      ['1-ary', [1], [1], ['1', '1']],
+      ['1-ary', [1], [2], ['1', '2']],
+      ['2-ary', [undefined, undefined], [1, undefined], []],
+      ['2-ary', [undefined, undefined], [1, 2], ['1:2']],
+      ['2-ary', [1, 2], [1, 2], ['1:2', '1:2', '1:2']],
+      ['2-ary', [1, 2], [1, 3], ['1:2', '1:2', '1:3']],
+      ['2-ary', [1, 2], [2, 3], ['1:2', '2:2', '2:3']]
     ].forEach(([label, initial, next, expected]) => {
       // Check production is only evaluated when at least on input changed.
       const format = x => x === undefined ? 'undefined' : x
       it(`Evaluation count/set (${label}) (${initial.map(format)}) <- (${next.map(format)})`, function () {
-        const count = counter()
-        const inputs = initial.map(Signal.of) // 1
-        link(count, inputs) // 2
+        const inputs = initial.map(Signal.of)
+        const actual = recorder(inputs)
         next.forEach((value, i) => inputs[i](value))
-        assert.strictEqual(count.actual(), expected)
+        assert.deepStrictEqual(actual(), expected)
       })
     })
 
     ;[
-      [undefined, 1],
-      [1, 2]
+      [undefined, ['12']],
+      [1, ['6', '12']]
     ].forEach(([initial, expected]) => {
       it(`Evaluation count/set [diamond] (${initial})`, function () {
-        const count = counter()
-        const input = Signal.of(initial)
-        diamond(count, input)
-        input(2); assert.strictEqual(count.actual(), expected)
+        const a = Signal.of(initial)
+        const b = link(a => a + 1, [a])
+        const c = link(a => a + 2, [a])
+        const d = link((b, c) => b * c, [b, c])
+        const actual = recorder(d)
+        a(2)
+        assert.deepStrictEqual(actual(), expected)
       })
+    })
+
+    it('[7a82] Evaluation count/set [diamond/extended]', function () {
+      // Verify topological sort/order works as expected.
+      const a = Signal.of()
+      const b = link(a => a + 1, [a])
+      const c = link(a => a + 2, [a])
+      const d = link(c => c + 3, [c])
+      const e = link((b, d) => b + d, [b, d])
+      const actual = recorder(e)
+      ;[1, 5, 11].forEach(a)
+      assert.deepStrictEqual(actual(), ['8', '16', '28'])
     })
 
     ;[
@@ -319,21 +330,17 @@ describe('Interface Specification', function () {
     it('filter :: Signal s => (a -> Boolean) -> s a -> s a', function () {
       const a = Signal.of()
       const b = R.filter(x => x % 2 === 0, a)
-
-      const actual = []
-      link(x => actual.push(x), [b])
+      const actual = recorder(b)
       ;[2, 3, 4].forEach(a)
-      assert.deepStrictEqual(actual, [2, 4])
+      assert.deepStrictEqual(actual(), ['2', '4'])
     })
 
     it('reject :: Signal s => (a -> Boolean) -> s a -> s a', function () {
       const a = Signal.of()
       const b = R.reject(x => x % 2 === 0, a)
-
-      const actual = []
-      link(x => actual.push(x), [b])
+      const actual = recorder(b)
       ;[1, 2, 3, 4].forEach(a)
-      assert.deepStrictEqual(actual, [1, 3])
+      assert.deepStrictEqual(actual(), ['1', '3'])
     })
 
     it('ap :: Signal s => s (a -> b) -> s a -> s b', function () {
@@ -347,13 +354,10 @@ describe('Interface Specification', function () {
     })
 
     it('[3646] chain :: Signal s => (a -> s b) -> s a -> s b', async function () {
-      const expected = [42]
       const input = Signal.of()
-      const output = input.chain(() => R.tap(s => expected.forEach(s), Signal.of()))
-
-      const actual = []
-      link(x => actual.push(x), [output])
-      input('go!'); assert.deepStrictEqual(actual, expected)
+      const output = input.chain(() => R.tap(s => [42].forEach(s), Signal.of()))
+      const actual = recorder(output)
+      input('go!'); assert.deepStrictEqual(actual(), ['42'])
     })
 
     it('[4ae4] chain :: Signal s => (a -> s b) -> s a -> s b', async function () {
