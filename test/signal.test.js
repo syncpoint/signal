@@ -4,13 +4,13 @@ import * as R from 'ramda'
 import Signal from '../lib/signal'
 
 const {
-  isDefined, isSignal,
+  isSignal,
   link, chain, startWith, scan, tap, loop, lift,
   fromListeners, skipRepeats
 } = Signal
 
 const hasValue = (x, v) =>
-  isSignal(x) && isDefined(x) && x() === v
+  isSignal(x) && x() === v
 
 const diamond = (fn, input) => link(fn, [
   link(a => a + 1, input),
@@ -52,7 +52,6 @@ describe('Interface Specification', function () {
   it('of :: Signal s, v undefined => v -> s v', function () {
     // Value of undefined signal is `undefined`.
     const s = Signal.of(undefined)
-    assert(!isDefined(s))
     assert.strictEqual(s(), undefined)
   })
 
