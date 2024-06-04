@@ -9,9 +9,22 @@ npm install @syncpoint/signal
 npm install ramda # optional
 ```
 
+Signal supports modules compatible with ES6 `import` and UMD/CJS `require`.
+
+```javascript
+import Signal from '@syncpoint/signal' // ES6
+```
+
+Or
+
+```javascript
+const Signal = require('@syncpoint/signal') // UMD/CJS
+```
+
+Combining two input signal is as simple as
+
 ```javascript
 import Signal from '@syncpoint/signal'
-// const Signal = require('@syncpoint/signal').default
 const a = Signal.of(3)
 const b = Signal.of(2)
 const c = Signal.link((a, b) => a * b, [a, b])
