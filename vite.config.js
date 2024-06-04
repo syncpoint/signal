@@ -1,14 +1,14 @@
 import path from 'path'
 import { defineConfig } from 'vite'
 
-const libraryName = 'signal'
+const entry = path.resolve(__dirname, 'lib/signal.js')
+const name = 'signal'
+const fileName = format =>
+  format === 'umd'
+    ? `${name}.umd.cjs`
+    : `${name}.es.js`
 
-export default defineConfig({
-  build: {
-    lib: {
-      entry: path.resolve(__dirname, 'lib/signal.js'),
-      name: libraryName,
-      fileName: (format) => `${libraryName}.${format}.js`
-    }
-  }
-})
+const lib = { entry, name, fileName }
+const build = { lib }
+
+export default defineConfig({ build })

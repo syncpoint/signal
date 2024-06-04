@@ -7,8 +7,15 @@
   "files": [
     "dist"
   ],
-  "main": "./dist/signal.umd.js",
+  "main": "./dist/signal.umd.cjs",
   "module": "./dist/signal.es.js",
+  "exports": {
+    ".": {
+      "require": "./dist/signal.umd.cjs",
+      "import": "./dist/signal.es.js",
+      "default": "./dist/signal.umd.cjs"
+    }
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/syncpoint/signal.git"
