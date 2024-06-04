@@ -1,7 +1,7 @@
 /* eslint-disable */
-const assert = require('assert');
-const R = require('ramda');
-const Signal = require('../lib/signal').default
+import assert from 'assert'
+import * as R from 'ramda'
+import Signal from '../lib/signal.js'
 
 // Compatibility
 const flyd = {
