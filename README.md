@@ -345,6 +345,8 @@ a() // 2
 
 `skipRepeats` filters consecutive values that are equal. This operator has two forms. The second form accepts a custom function for equality checks ( `===` being the default check.)
 
+Note: `skipRepeats` is now **deprecated** since it is no longer possible to update signals with identical consecutive values.
+
 ```javascript
 // skipRepeats :: Signal s => s a -> s a
 // skipRepeats :: Signal s => (a -> a -> Boolean) -> s a -> s a
