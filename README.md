@@ -47,7 +47,7 @@ For one of our projects we had to extent a rather complex OpenLayers interaction
 
 #### Introduction
 
-Signal provides two primitives: *Simple signals* `Signal.of` and *linked signals* `Signal.link`. Simple signals are just containers for a current value. One or more input signals can be linked to one output signal. The link function derives the output value from the input values. The output signal's value is automatically updated when at least one input signal's value has changed.
+Signal provides two primitives: *Simple signals* `Signal.of` and *linked signals* `Signal.link`. Simple signals are just containers for a current value. In general, signals are only updated if the new value is strictly not equal (read `!==`) to its current value. One or more input signals can be linked to one output signal. The link function derives the output value from the input values. The output signal's value is automatically updated when at least one input signal's value has changed.
 
 ```javascript
 const sum = (a, b) => a + b
