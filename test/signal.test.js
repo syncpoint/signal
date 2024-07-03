@@ -136,12 +136,12 @@ describe('Interface Specification', function () {
 
     ;[
       ['1-ary', [undefined], [0], ['0']],
-      ['1-ary', [1], [1], ['1', '1']],
+      // ['1-ary', [1], [1], ['1', '1']],
       ['1-ary', [1], [2], ['1', '2']],
       ['2-ary', [undefined, undefined], [1, undefined], []],
       ['2-ary', [undefined, undefined], [1, 2], ['1:2']],
-      ['2-ary', [1, 2], [1, 2], ['1:2', '1:2', '1:2']],
-      ['2-ary', [1, 2], [1, 3], ['1:2', '1:2', '1:3']],
+      // ['2-ary', [1, 2], [1, 2], ['1:2', '1:2', '1:2']],
+      // ['2-ary', [1, 2], [1, 3], ['1:2', '1:2', '1:3']],
       ['2-ary', [1, 2], [2, 3], ['1:2', '2:2', '2:3']]
     ].forEach(([label, initial, next, expected]) => {
       // Check production is only evaluated when at least on input changed.
@@ -548,5 +548,34 @@ describe('Interface Specification', function () {
 
       assert.strictEqual(count(), 2)
     })
+  })
+})
+
+describe('Behavior', function () {
+  it('Signal should only update on changed value', function () {
+    let called = 0
+    const a = Signal.of()
+    const b = a.map(a => { called++; return a + 1 })
+    assert.strictEqual(called, 0)
+    a(1); assert.strictEqual(called, 1)
+    a(1); assert.strictEqual(called, 1)
+  })
+
+  it('Effect (direct) should only be called on changed value', function () {
+    let called = 0
+    const a = Signal.of()
+    a.on(() => called++)
+    assert.strictEqual(called, 0)
+    a(1); assert.strictEqual(called, 1)
+    a(1); assert.strictEqual(called, 1)
+  })
+
+  it('Effect (indirect) should only be called on changed value', function () {
+    let called = 0
+    const a = Signal.of()
+    const b = a.map(a => a % 2)
+    b.on(() => called++)
+    a(2); assert.strictEqual(called, 1)
+    a(4); assert.strictEqual(called, 1)
   })
 })
