@@ -279,7 +279,7 @@ Streams don't have the notion of a *current value*, which can be queried at any 
 
 The following operators live under the Signal namespace and might be handy or they might not. There is no real reason to include them in this library, except that we use them for a different project. These operators can all be implemented with a few lines of code and only use the public API introduced so far.
 
-`fromListeners` was already mentioned above.
+`fromListeners` was already mentioned above. Note: `fromListeners` supports both `addEventListener`/`removeEventListener` and `on`/`off` protocols.
 
 ```
 fromListeners :: [String] -> Target -> Signal Event

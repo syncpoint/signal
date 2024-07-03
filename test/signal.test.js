@@ -468,61 +468,66 @@ describe('Interface Specification', function () {
       b(1); assert.strictEqual(c(), 4)
     })
 
-    it('fromListeners :: [String] -> Element -> Signal Event', async function () {
-      const acc = []
+    ;[
+      ['on/off', ['on', 'off']],
+      ['add/remove', ['addEventListener', 'removeEventListener']]
+    ].forEach(([hint, spec]) => {
+      it(`fromListeners :: [String] -> Element -> Signal Event [${hint}]`, async function () {
+        const acc = []
 
-      const emitter = id => {
-        let listener_
-        const addEventListener = (type, listener) => {
-          acc.push(`+:${id}`)
-          listener_ = listener
+        const emitter = ([on, off], id) => {
+          let listener_
+          const addEventListener = (type, listener) => {
+            acc.push(`+:${id}`)
+            listener_ = listener
+          }
+          const removeEventListener = (type, listener) => {
+            acc.push(`-:${id}`)
+            listener_ = null
+          }
+          const emit = n => listener_ && listener_(`${id}:${n}`)
+          return {
+            [on]: addEventListener,
+            [off]: removeEventListener,
+            emit
+          }
         }
-        const removeEventListener = (type, listener) => {
-          acc.push(`-:${id}`)
-          listener_ = null
-        }
-        const emit = n => listener_ && listener_(`${id}:${n}`)
-        return {
-          addEventListener,
-          removeEventListener,
-          emit
-        }
-      }
 
-      const emitters = R.range(0, 3).reduce((acc, i) => {
-        acc[i] = emitter(i)
-        return acc
-      }, {})
+        const emitters = R.range(0, 3).reduce((acc, i) => {
+          acc[i] = emitter(spec, i)
+          return acc
+        }, {})
 
-      const input = Signal.of()
-      const output = chain(x => {
-        return emitters[x] && fromListeners(['event'], emitters[x])
-      }, input)
+        const input = Signal.of()
+        const output = chain(x => {
+          return emitters[x] && fromListeners(['event'], emitters[x])
+        }, input)
 
-      const actual = await new Promise(resolve => {
-        const ticks = [
-          () => input(0), () => emitters[0].emit(0), () => emitters[0].emit(1), () => emitters[0].emit(2),
-          () => input(1), () => emitters[1].emit(0), () => emitters[1].emit(1), () => emitters[1].emit(2),
-          () => input(2), () => emitters[2].emit(0), () => emitters[2].emit(1), () => emitters[2].emit(2),
-          () => input(null)
+        const actual = await new Promise(resolve => {
+          const ticks = [
+            () => input(0), () => emitters[0].emit(0), () => emitters[0].emit(1), () => emitters[0].emit(2),
+            () => input(1), () => emitters[1].emit(0), () => emitters[1].emit(1), () => emitters[1].emit(2),
+            () => input(2), () => emitters[2].emit(0), () => emitters[2].emit(1), () => emitters[2].emit(2),
+            () => input(null)
+          ]
+
+          const timer = setInterval(() => {
+            if (ticks.length) return ticks.shift()()
+            clearInterval(timer)
+            resolve(acc)
+          }, 0)
+
+          link(x => acc.push(x), output)
+        })
+
+        const expected = [
+          '+:0', '0:0', '0:1', '0:2', '-:0',
+          '+:1', '1:0', '1:1', '1:2', '-:1',
+          '+:2', '2:0', '2:1', '2:2', '-:2'
         ]
 
-        const timer = setInterval(() => {
-          if (ticks.length) return ticks.shift()()
-          clearInterval(timer)
-          resolve(acc)
-        }, 0)
-
-        link(x => acc.push(x), output)
+        assert.deepStrictEqual(actual, expected)
       })
-
-      const expected = [
-        '+:0', '0:0', '0:1', '0:2', '-:0',
-        '+:1', '1:0', '1:1', '1:2', '-:1',
-        '+:2', '2:0', '2:1', '2:2', '-:2'
-      ]
-
-      assert.deepStrictEqual(actual, expected)
     })
 
     it('skipRepeats :: Signal s => s a -> s a', function () {
