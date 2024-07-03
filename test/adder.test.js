@@ -1,7 +1,7 @@
 import assert from 'assert'
 import { it } from 'mocha'
 import * as R from 'ramda'
-import Signal from '../lib/signal.js'
+import Signal from '../lib/index.js'
 
 const { link } = Signal
 

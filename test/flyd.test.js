@@ -1,7 +1,7 @@
 /* eslint-disable */
 import assert from 'assert'
 import * as R from 'ramda'
-import Signal from '../lib/signal.js'
+import Signal from '../lib/index.js'
 
 // Compatibility
 const flyd = {

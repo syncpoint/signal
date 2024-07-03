@@ -1,12 +1,12 @@
 import assert from 'assert'
 import { describe, it } from 'mocha'
 import * as R from 'ramda'
-import Signal from '../lib/signal.js'
+import Signal from '../lib/index.js'
 
 const {
   isSignal,
   link, chain, startWith, scan, tap, loop, lift,
-  fromListeners, skipRepeats
+  fromListeners
 } = Signal
 
 const hasValue = (x, v) =>
@@ -528,30 +528,6 @@ describe('Interface Specification', function () {
 
         assert.deepStrictEqual(actual, expected)
       })
-    })
-
-    it('skipRepeats :: Signal s => s a -> s a', function () {
-      const a = Signal.of(1)
-      const b = skipRepeats(a)
-      const count = scan(acc => acc + 1, 0, b)
-      ;[1, 1, 1, 2, 1, 3].forEach(a)
-      assert.strictEqual(count(), 4)
-    })
-
-    it('skipRepeats :: Signal s => (a -> a -> Boolean) -> s a -> s a', function () {
-      const eq = (a, b) => a.revision === b.revision
-      const a = Signal.of()
-      const b = skipRepeats(eq, a)
-      const count = scan(acc => acc + 1, 0, b)
-      ;[
-        { revision: 1, data: 'xyz' },
-        { revision: 1, data: '---' },
-        { revision: 1, data: 'abc' },
-        { revision: 2, data: 'abc' },
-        { revision: 2, data: 'abc' }
-      ].forEach(a)
-
-      assert.strictEqual(count(), 2)
     })
   })
 })

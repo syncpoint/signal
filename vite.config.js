@@ -1,7 +1,7 @@
 import path from 'path'
 import { defineConfig } from 'vite'
 
-const entry = path.resolve(__dirname, 'lib/signal.js')
+const entry = path.resolve(__dirname, 'lib/index.js')
 const name = 'signal'
 const fileName = format =>
   format === 'umd'
