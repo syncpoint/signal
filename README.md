@@ -6,17 +6,17 @@ Time-varying values with acyclic static dependencies and synchronous glitch-free
 
 * [Quickstart](#quickstart)
 * [Motivation](#motivation)
-* [History of Origins](#history of origins)
+* [History of Origins](#history-of-origins)
 * [Introduction](#introduction)
-* [Signals are Monads](#signals are monads)
-* [Signal supports transducer protocol](#Signal supports transducer protocol)
-* [Nested signals, reads, writes](#nested signals, reads, writes)
-* [Fine-print: `undefined`](#Fine-print: `undefined`)
-* [Fine-print: Glitch-free](#fine-print: glitch-free)
-* [Fine-print: Disposable](#fine-print: disposable)
-* [Fine-print: Error Handling](#fine-print: error handling)
-* [Why signals and not streams?](#why signals and not streams?)
-* [Miscellaneous Operators](#miscellaneous operators)
+* [Signals are Monads](#signals-are-monads)
+* [Signal supports transducer protocol](#signal-supports-transducer-protocol)
+* [Nested signals, reads, writes](#nested-signals-reads-writes)
+* [Fine-print: `undefined`](#fine-print-undefined)
+* [Fine-print: Glitch-free](#fine-print-glitch-free)
+* [Fine-print: Disposable](#fine-print_disposable)
+* [Fine-print: Error Handling](#fine-print-error-handling)
+* [Why signals and not streams?](#why-signals-and-not-streams)
+* [Miscellaneous Operators](#miscellaneous-operators)
 
 #### Quickstart
 
@@ -394,4 +394,3 @@ const fn = R.compose(
 const a = fn(Signal.of(1))
 a() // 2
 ```
-
