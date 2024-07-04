@@ -2,6 +2,22 @@
 
 Time-varying values with acyclic static dependencies and synchronous glitch-free updates. **Signal** is heavily inspired by and in many aspects quite similar to [flyd](https://github.com/paldepind/flyd). Our thanks and appreciation go out to the people who provided this neat piece of software. Thank you guys!
 
+### Table of contents
+
+* [Quickstart](#quickstart)
+* [Motivation](#motivation)
+* [History of Origins](#history of origins)
+* [Introduction](#introduction)
+* [Signals are Monads](#signals are monads)
+* [Signal supports transducer protocol](#Signal supports transducer protocol)
+* [Nested signals, reads, writes](#nested signals, reads, writes)
+* [Fine-print: `undefined`](#Fine-print: `undefined`)
+* [Fine-print: Glitch-free](#fine-print: glitch-free)
+* [Fine-print: Disposable](#fine-print: disposable)
+* [Fine-print: Error Handling](#fine-print: error handling)
+* [Why signals and not streams?](#why signals and not streams?)
+* [Miscellaneous Operators](#miscellaneous operators)
+
 #### Quickstart
 
 ```bash
@@ -121,6 +137,42 @@ const fn = R.compose(
 const a = fn(Signal.of(3))
 a() // true
 ```
+
+#### Signal supports transducer protocol
+
+A transducer (not the device) is a powerful tool for transformation of data in an efficient way. What's more transducers like `map` and `filter` can be applied to any suitable collection or container type like array, sets, streams, channels, CSP and so on. The [transducer protocol](https://github.com/jlongster/transducers.js?tab=readme-ov-file#the-transducer-protocol) proposed by James Long assures that transducers are compatible between different libraries like Ramda, which is used in the following examples. There is a bunch of excellent write-ups about what transducers are, how they work and what possible implementations might look like. Attempting to explain this ourselves would result in failure. Here is a small list of posts for the curious:
+
+* Heiker Curiel: [Transducers in javaScript](https://vonheikemen.github.io/devlog/web-development/transducers-in-javascript/)
+* Eric Elliot: [Transducers: Efficient Data Processing Pipelines in JavaScript](https://medium.com/javascript-scene/transducers-efficient-data-processing-pipelines-in-javascript-7985330fe73d)
+* Jeremy Daly: [Transducers: Supercharge your functional JavaScript](https://www.jeremydaly.com/transducers-supercharge-functional-javascript/)
+
+General transducers expand Signal's functionality beyond its built-in operators. For Ramda's `R.drop` or `R.reject` for example there are no direct equivalents in Signal. But we can use them through `Signal.transduce`.
+
+```javascript
+const a = Signal.of()
+const b = Signal.transduce(R.drop(3), a)
+const c = Signal.scan(R.flip(R.append), [], b)
+R.range(1, 7).map(a)
+c() // [4, 5, 6]
+```
+
+Composing transducers is more efficient than introducing intermediate signal in a long chain of transformations.
+
+```javascript
+const xf = R.compose(
+  R.map(R.add(-1)),
+  R.filter(x => x % 2 === 0),
+  R.map(R.multiply(3))
+)
+
+const a = Signal.of()
+const b = Signal.transduce(xf, a)
+const c = Signal.scan(R.flip(R.append), [], b)
+;[4, 1, -3, 8, 7].map(a)
+c() // [0, -12, 18]
+```
+
+
 
 #### Nested signals, reads, writes
 
