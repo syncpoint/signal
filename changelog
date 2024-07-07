@@ -5,6 +5,7 @@
 * removed operation skipRepeats
 * fromListener: also support on/off protocol
 * implemented missing dirty check
+* support equals option for on and link
 
 1.1.0
 * got rid of global state (evaluation stack)
