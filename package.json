@@ -21,9 +21,9 @@
     "url": "https://github.com/syncpoint/signal.git"
   },
   "scripts": {
-    "test": "mocha --recursive test",
+    "test": "mocha './test/**/*.test.js'",
     "prepare": "vite build",
-    "coverage": "c8 -all --include 'lib/**/*' --reporter=html mocha --recursive test/"
+    "coverage": "c8 -all --include 'lib/**/*' --reporter=html mocha './test/**/*.test.js'"
   },
   "keywords": [
     "frp",

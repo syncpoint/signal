@@ -4,6 +4,7 @@
 * update signal only on changed value
 * removed operation skipRepeats
 * fromListener: also support on/off protocol
+* implemented missing dirty check
 
 1.1.0
 * got rid of global state (evaluation stack)

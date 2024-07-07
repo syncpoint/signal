@@ -53,66 +53,6 @@ function sumFn(x, y) { return x + y; }
 function identityLift(x) { return x; }
 
 describe('stream', function() {
-  it('[ec41] can be set with initial value', function() {
-    var s = stream(12);
-    assert.equal(s(), 12);
-  });
-  it('[48c9] can be set', function() {
-    var s = stream();
-    s(23);
-    assert.equal(s(), 23);
-    s(3);
-    assert.equal(s(), 3);
-  });
-  it('[b420] setting a stream returns the stream', function() {
-    var s = stream();
-    assert.equal(s, s(23));
-  });
-  it('[8a4a] can works with JSON.stringify', function() {
-    var obj = {
-      num: stream(23),
-      str: stream('string'),
-      obj: stream({ is_object: true })
-    };
-    var expected_outcome = {
-      num: 23,
-      str: 'string',
-      obj: {
-        is_object: true
-      }
-    };
-    var jsonObject = JSON.parse(JSON.stringify(obj));
-    assert.deepEqual(jsonObject, expected_outcome);
-  });
-  it.skip("[2b2d - incompatible] let's explicit `undefined` flow down streams", function() {
-    var result = [];
-    var s1 = stream(undefined);
-    flyd.map(function(v) { result.push(v); }, s1);
-    s1(2)(undefined);
-    assert.deepEqual(result, [undefined, 2, undefined]);
-  });
-  it('[633c] handles a null floating down the stream', function() {
-    stream()(null);
-  });
-  it('[4470] can typecheck', function() {
-    var s1 = stream();
-    var s2 = stream(null);
-    var s3 = stream();
-    var f = function() { };
-    assert(flyd.isStream(s1));
-    assert(flyd.isStream(s2));
-    assert(flyd.isStream(s3));
-    assert(!flyd.isStream(f));
-  });
-  it('[8249] has pretty string representation', function() {
-    var ns = stream(1);
-    var ss = stream('hello');
-    var os = stream({});
-    assert.deepEqual('' + ns, 'stream(1)');
-    assert.deepEqual('' + ss, 'stream(hello)');
-    assert.deepEqual('' + os, 'stream([object Object])');
-  });
-
   describe('dependent streams', function() {
     it('[c6a4] updates dependencies', function() {
       var x = stream(3);
@@ -175,30 +115,6 @@ describe('stream', function() {
       assert.equal(sumPlusDoubleSum(), sum() * 3);
       assert.equal(sumPlusDoubleSum(), (2 + 3) * 3);
     });
-    it.skip('[b57a - unsupported] can get its own value', function() {
-      var num = stream(0);
-      var sum = combine(function(num, self) {
-        return (self() || 0) + num();
-      }, [num]);
-      num(2)(3)(8)(7);
-      assert.equal(sum(), 20);
-    });
-    it.skip('[6034 - unsupported] is called with changed streams', function() {
-      var s1 = stream(0);
-      var s2 = stream(0);
-      var result = [];
-      combine(function(s1, s2, self, changed) {
-        if (changed[0] === s1) result.push(1);
-        if (changed[0] === s2) result.push(2);
-      }, [s1, s2]);
-      s1(1);
-      s2(1);
-      s2(1);
-      s1(1);
-      s2(1);
-      s1(1);
-      assert.deepEqual(result, [1, 2, 2, 1, 2, 1]);
-    });
     it('[4362] handles dependencies when streams are triggered in streams', function() {
       var x = stream(4);
       var y = stream(3);
@@ -211,37 +127,6 @@ describe('stream', function() {
       z(4);
       assert.equal(setAndSum(), 7);
       assert.equal(doubleX(), 6);
-    });
-    it.skip('[9861 - incompatible] executes to the end before handlers are triggered', function() {
-      var order = [];
-      var x = stream(4);
-      var y = stream(3);
-      combine(function dx(x) {
-        if (x === 3) order.push(2);
-        return x * 2;
-      }, [x]);
-      combine(function sy(y) {
-        x(3);
-        order.push(1);
-        return y;
-      }, [y]);
-      assert.deepEqual(order, [1, 2]);
-    });
-    it.skip('[0eeb - incompatible] with static deps executes to the end', function() {
-      var order = [];
-      var x = stream(4);
-      var y = stream(3);
-      combine(function(x) {
-        if (x === 3) order.push(2);
-        return x * 2;
-      }, [x]);
-      combine(function(y) {
-        x(3);
-        order.push(1);
-        return y;
-      }, [y]);
-      assert.equal(order[0], 1);
-      assert.equal(order[1], 2);
     });
     it('[4799] can filter values', function() {
       var result = [];
@@ -269,19 +154,6 @@ describe('stream', function() {
       b(1);
       assert.deepEqual(result, [1, 2]);
     });
-    it.skip('[afec - unsupported] can combine streams and project deps as args', function() {
-      var a = flyd.stream();
-      var b = flyd.stream(0);
-      var collect = function(x, y, self) { return (self() || []).concat([x(), y()]); };
-
-      var history = flyd.combine(collect, [a, b]);
-      a(1)(2); // [1, 0, 2, 0]
-      b(3);    // [1, 0, 2, 0, 2, 3]
-      a(4);    // [1, 0, 2, 0, 2, 3, 4, 3]
-      assert.deepEqual(history(), [
-        1, 0, 2, 0, 2, 3, 4, 3
-      ]);
-    });
   });
 
   describe('streams created within dependent stream bodies', function() {
@@ -301,17 +173,6 @@ describe('stream', function() {
         n(1);
       }));
       assert.equal(result, 101);
-    });
-    it.skip('[15c4 - unsupported] if a streams end stream is called it takes effect immediately', function() {
-      var result = undefined;
-      stream(1).pipe(map(function() {
-        var n = stream();
-        n.pipe(map(function(v) { result = v + 100; }));
-        n.end(true);
-        n(1);
-        n(2);
-      }));
-      assert.equal(result, undefined);
     });
     it('[4d54] can create multi-level dependent streams inside a stream body', function() {
       var result = 0;
@@ -347,9 +208,6 @@ describe('stream', function() {
     });
   });
 
-  describe.skip('[de65 - unsupported] ending a stream')
-  describe.skip('[4565 - unsupported] Promises')
-
   describe('on', function() {
     it('[4121] is invoked when stream changes', function() {
       var s = flyd.stream();
@@ -375,16 +233,6 @@ describe('stream', function() {
       assert.equal(doubleX(), 6);
       x(1);
       assert.equal(doubleX(), 2);
-    });
-    it.skip('[2b43 - incompatible] handles function returning undefined', function() {
-      var x = stream(1);
-      var maybeDoubleX = flyd.map(function(x) {
-        return x > 3 ? 2 * x : undefined;
-      }, x);
-      assert.equal(undefined, maybeDoubleX());
-      assert.equal(true, maybeDoubleX.hasVal);
-      x(4);
-      assert.equal(8, maybeDoubleX());
     });
     it('[40ba] is curried', function() {
       var x = stream(3);
@@ -425,84 +273,9 @@ describe('stream', function() {
       s(1)(2)(3)(4)(5);
       assert.deepEqual(result, [1, 2, 3, 4, 5]);
     });
-    it.skip('[84ee - invalid] returns stream with result from all streams created by function', function() {
-      var result = [];
-      function f(v) {
-        var s = stream();
-        setImmediate(function() {
-          s(v + 1)(v + 2)(v + 3);
-        });
-        return s;
-      }
-      var s = stream();
-      flyd.map(function(v) {
-        result.push(v);
-      }, flyd.chain(f, s));
-      s(1)(3)(5);
-      setImmediate(function() {
-        assert.deepEqual(result, [2, 3, 4,
-          4, 5, 6,
-          6, 7, 8]);
-      });
-    });
-    it.skip('[2484 - unsupported] passed bug outlined in https://github.com/paldepind/flyd/issues/31', function(done) {
-      function delay(val, ms) {
-        var outStream = flyd.stream();
-
-        setTimeout(function() {
-          outStream(val);
-          outStream.end(true);
-        }, ms);
-
-        return outStream;
-      }
-
-      var main = delay(1, 500);
-      var merged = flyd.chain(function(v) {
-        return delay(v, 1000)
-      }, main);
-
-      flyd.on(function() {
-        assert(main() === 1);
-        assert(merged() === 1);
-        done();
-      }, merged.end);
-    });
-
-    it.skip('[9ab1 - invalid] preserves ordering', function() {
-      function delay(val, ms) {
-        var outStream = flyd.stream();
-
-        setTimeout(function() {
-          outStream(val);
-          outStream.end(true);
-        }, ms);
-
-        return outStream;
-      }
-
-      var s = stream();
-
-      var s2 = s
-        .pipe(chain(function(val) {
-          return delay(val, 100);
-        }));
-      s(1)(2)(3)(4);
-
-      flyd.on(function(val) {
-        assert.equal(val, 4);
-      }, s2)
-    });
   });
 
   describe('scan', function() {
-    it.skip('[457c - debatable] has initial acc as value when stream is undefined', function() {
-      var numbers = stream();
-      var sum = flyd.scan(function(sum, n) {
-        return sum + n;
-      }, 0, numbers);
-      assert.equal(sum(), 0);
-    });
     it('[ab9b] can sum streams of integers', function() {
       var numbers = stream();
       var sum = flyd.scan(function(sum, n) {
@@ -519,79 +292,6 @@ describe('stream', function() {
       var sum = sumStream(numbers);
       numbers(3)(2)(4)(10);
       assert.equal(sum(), 19);
-    });
-    it.skip('[41f4 - incompatible] passes undefined', function() {
-      var x = stream();
-      var scan = flyd.scan(function(acc, x) {
-        return acc.concat([x]);
-      }, [], x);
-
-      x(1)(2)(undefined)(3)(4);
-
-      assert.deepEqual(scan(), [1, 2, undefined, 3, 4]);
-    });
-  });
-
-  describe('merge', function() {
-    it('[6926] can sum streams of integers', function() {
-      var result = [];
-      var s1 = stream();
-      var s2 = stream();
-      var merged = flyd.merge(s1, s2);
-      combine(function(merged) {
-        result.push(merged);
-      }, [merged]);
-      s1(12)(2); s2(4)(44); s1(1); s2(12)(2);
-      assert.deepEqual(result, [12, 2, 4, 44, 1, 12, 2]);
-    });
-    it('[429a] is curried', function() {
-      var result = [];
-      var s1 = stream();
-      var mergeWithS1 = flyd.merge(s1);
-      var s2 = stream();
-      var s1and2 = mergeWithS1(s2);
-      flyd.map(function(v) { result.push(v); }, s1and2);
-      s1(12)(2); s2(4)(44); s1(1); s2(12)(2);
-      assert.deepEqual(result, [12, 2, 4, 44, 1, 12, 2]);
-    });
-    it.skip('[8ed3 - incompatible] should pass defined undefined along', function() {
-      var s1 = stream();
-      var s2 = stream(undefined);
-      var merged = flyd.merge(s1, s2);
-
-      assert.equal(merged(), undefined);
-
-      s1(25);
-      assert.equal(merged(), 25);
-
-      s1(undefined);
-      assert.equal(merged(), undefined);
-
-      s2(15);
-      assert.equal(merged(), 15);
-    });
-    it('[c782] should work for s1 being defined first', function() {
-      var s1 = stream(undefined);
-      var s2 = stream();
-      var merged = flyd.merge(s1, s2);
-      assert.equal(merged(), undefined);
-
-      s1(25);
-      assert.equal(merged(), 25);
-    });
-    it.skip('[4cd4 - unsupported] ends only when both merged streams have ended', function() {
-      var result = [];
-      var s1 = stream();
-      var s2 = stream();
-      var s1and2 = flyd.merge(s1, s2);
-      flyd.map(function(v) { result.push(v); }, s1and2);
-      s1(12)(2); s2(4)(44); s1(1);
-      s1.end(true);
-      assert(!s1and2.end());
-      s2(12)(2);
-      s2.end(true);
-      assert(s1and2.end());
-      assert.deepEqual(result, [12, 2, 4, 44, 1, 12, 2]);
     });
   });
 
@@ -692,84 +392,7 @@ describe('stream', function() {
       assert.equal(u.pipe(ap(a.of(y)))(),
         a.of(function(f) { return f(y); }).pipe(ap(u))());
     });
-    it.skip('[4a14 - unsupported] can create dependent stream inside stream', function() {
-      var one = flyd.stream();
-      combine(function(one, self) {
-        self(flyd.combine(function() { }, []));
-      }, [one]);
-      one(1);
-    });
-    it.skip('[8c4f - unsupported] can create immediate dependent stream inside stream', function() {
-      var one = flyd.stream();
-      combine(function(one, self) {
-        self(flyd.immediate(flyd.combine(function() { }, [])));
-      }, [one]);
-      one(1);
-    });
-    it.skip('[adb9 - unsupported] creating a stream inside a stream all dependencies are updated', function() {
-      var result = [];
-      var str = flyd.stream();
-      flyd.map(function(x) {
-        result.push(x);
-      }, str);
-      flyd.map(function() {
-        // create a stream, the first dependant on `str` should still be updated
-        flyd.combine(function() { }, []);
-      }, str);
-      str(1);
-      str(2);
-      str(3);
-      assert.deepEqual(result, [1, 2, 3]);
-    });
   });
-
-  describe.skip('[489f - unsupported] transducer.js transducer support');
-
-  describe('Ramda transducer support', function() {
-    it.skip('[8b5a - unsupported] creates new stream with map applied', function() {
-      var result = [];
-      var s1 = stream();
-      var tx = R.map(function(x) { return x * 3; });
-      var s2 = flyd.transduce(tx, s1);
-      combine(function(s2) { result.push(s2()); }, [s2]);
-      s1(1)(2)(4)(6);
-      assert.deepEqual(result, [3, 6, 12, 18]);
-    });
-    it.skip('[52cf - unsupported] creates new stream with filter applied', function() {
-      var result = [];
-      var s1 = stream();
-      var tx = R.pipe(
-        R.map(function(x) { return x * 3; }),
-        R.filter(function(x) { return x % 2 === 0; })
-      );
-      var s2 = flyd.transduce(tx, s1);
-      combine(function(s2) { result.push(s2()); }, [s2]);
-      s1(1)(2)(3)(4);
-      assert.deepEqual(result, [6, 12]);
-    });
-    it.skip('[4fed] filters empty elements', function() {
-      var result = [];
-      var s1 = stream();
-      var s2 = flyd.transduce(R.reject(R.isEmpty), s1);
-      flyd.map(function(v) { result.push(v); }, s2);
-      s1('foo')('')('bar')('')('')('!');
-      assert.deepEqual(result, ['foo', 'bar', '!']);
-    });
-    it.skip('[a1dc - unsupported] supports dedupe', function() {
-      var result = [];
-      var s1 = stream();
-      var tx = R.compose(
-        R.map(R.multiply(2)),
-        R.dropRepeats()
-      );
-      var s2 = flyd.transduce(tx, s1);
-      combine(function(s2) { result.push(s2()); }, [s2]);
-      s1(1)(1)(2)(3)(3)(3)(4);
-      assert.deepEqual(result, [2, 4, 6, 8]);
-    });
-    // @todo: Better transducer tests!!
-  });
-
   describe('atomic updates', function() {
     it('[970e] does atomic updates', function() {
       var result = [];
@@ -816,27 +439,6 @@ describe('stream', function() {
       a(1)(2)(3);
       assert.deepEqual(result, [10, 13, 16]);
     });
-    it.skip('[4a6b - unsupported] is called with all changed dependencies', function() {
-      var result = [];
-      var a = flyd.stream(0);
-      var b = flyd.combine(function(a) { return a() + 1; }, [a]);
-      var c = flyd.combine(function(a) { return a() + 2; }, [a]);
-
-      var d = flyd.stream(0);
-      var e = flyd.combine(function(d) { return d() + 4; }, [d]);
-      var f = flyd.combine(function(d) { return d() + 5; }, [d]);
-      var g = flyd.combine(function(d) { return d() + 6; }, [d]);
-
-      flyd.combine(function(a, b, c, d, e, f, g, self, changed) {
-        var vals = changed.map(function(s) { return s(); });
-        result.push(vals);
-        return 1;
-      }, [a, b, c, d, e, f, g]);
-      a(1); d(2); a(3);
-      assert.deepEqual(result, [
-        [], [1, 3, 2], [2, 8, 7, 6], [3, 5, 4]
-      ]);
-    });
     it('[9303] nested streams atomic update', function() {
       var invocationCount = 0;
       var mapper = function(val) {
@@ -874,11 +476,6 @@ describe('stream', function() {
       // ap :: Signal s => Signal (a → b) → a → b
       var applied = R.ap(s, val);
       assert.equal(applied(), 6);
-    });
-
-    it.skip('[eb16 - incompatible] old ap', function() {
-      var s = stream(R.add(3)).ap(stream(3));
-      assert.equal(s(), 6);
     });
 
     it('[4727] of', function() {

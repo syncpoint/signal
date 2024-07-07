@@ -1,0 +1,6 @@
+@syncpoint/signal v1.2.0 2024-07-07T04:48:36.366Z
+CPU: Apple M2
+OS: Darwin Kernel Version 23.5.0: Wed May  1 20:19:05 PDT 2024; root:xnu-10063.121.3~5/RELEASE_ARM64_T8112
+RAM: rss=65.9mb heap=17.3mb used=9.8mb arr=0.4mb
+16-bit full adder x 1,187 ops/sec @ 842μs/op ± 1.38% (min: 842μs, max: 842μs)
+RAM: rss=66.6mb heap=17.6mb used=10.6mb arr=0.4mb

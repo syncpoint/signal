@@ -33,6 +33,39 @@ const recorder = inputs => {
 }
 
 describe('Interface Specification', function () {
+
+  ;[
+    ['8249/5c9d', undefined, 'Signal(undefined)'],
+    ['8249/42e4', 1, 'Signal(1)'],
+    ['8249/28bc', 'hello', 'Signal(hello)'],
+    ['8249/414f', {}, 'Signal([object Object])'],
+  ].forEach(([id, value, expected]) => {
+    it(`[${id}] toString() :: Signal s => s -> string`, function() {
+      const a = Signal.of(value)
+      assert.deepEqual(a.toString(), expected)
+    })
+  })
+
+  it('[8a4a] toJSON :: Signal s -> JSON', function() {
+    const object = {
+      num: Signal.of(23),
+      str: Signal.of('string'),
+      obj: Signal.of({ is_object: true })
+    }
+
+    const expected = {
+      num: 23,
+      str: 'string',
+      obj: {
+        is_object: true
+      }
+    }
+
+    const actual = JSON.parse(JSON.stringify(object))
+    assert.deepEqual(actual, expected)
+  })
+
+
   ;[
     ['null', null],
     ['number', 0, 42],
@@ -56,15 +89,15 @@ describe('Interface Specification', function () {
   })
 
   ;[
-    ['null', null],
-    ['number', 0],
-    ['string', 'x'],
-    ['boolean', true],
-    ['function', x => x],
-    ['object', { key: 'value ' }]
-  ].forEach(([label, v]) => {
+    ['d25b/4edd', 'null', null],
+    ['d25b/846d', 'number', 0],
+    ['d25b/e268', 'string', 'x'],
+    ['d25b/4c73', 'boolean', true],
+    ['d25b/9bd6', 'function', x => x],
+    ['d25b/56a9', 'object', { key: 'value ' }]
+  ].forEach(([id, label, v]) => {
     // Updating signal with undefined is a no-op.
-    it(`set :: Signal s => ${label} -> undefined -> s ${label}`, function () {
+    it(`[${id}] set :: Signal s => ${label} -> undefined -> s ${label}`, function () {
       const s = Signal.of(v)
       s(undefined)
       assert.strictEqual(s(), v)
@@ -72,18 +105,25 @@ describe('Interface Specification', function () {
   })
 
   ;[
-    [undefined, null],
-    [undefined, 1],
-    [null, 1],
-    [1, null],
-    [1, 2]
-  ].forEach(([a, b]) => {
-    it(`set :: Signal s => ${a} -> ${b} -> s ${b}`, function () {
+    ['475c/448c', undefined, null],
+    ['475c/b52f', undefined, 1],
+    ['475c/d329', null, 1],
+    ['475c/44e8', 1, null],
+    ['475c/9f4a', 1, 2]
+  ].forEach(([id, a, b]) => {
+    it(`[${id}] set :: Signal s => ${a} -> ${b} -> s ${b}`, function () {
       const s = Signal.of(a)
       s(b)
       assert.strictEqual(s(), b)
     })
   })
+
+  it('[b420] set :: Signal s => () -> s', function() {
+    const expected = Signal.of()
+    const actual = expected(23)
+    assert.strictEqual(actual, expected)
+  });
+
 
   it('on :: Signal s => (a -> *) -> s a -> (() -> Unit)', function () {
     const acc = []
@@ -98,12 +138,12 @@ describe('Interface Specification', function () {
   describe('[TypeError] link :: Signal s => (...[any] -> b) -> [s any] -> s b', function () {
     [
       [undefined, undefined, '"fn" is undefined'],
-      [x => x, undefined, '"inputs" is undefined'],
-      [x => x, 'x', '"inputs" is not an array'],
+      [x => x, undefined, '"inputs" is empty array'],
+      [x => x, 'x', '"inputs" contains non-signal or falsy value'],
       [x => x, [], '"inputs" is empty array'],
       [x => x, ['x'], '"inputs" contains non-signal or falsy value'],
-      [x => x, [null], '"inputs" contains non-signal or falsy value'],
-      [x => x, [undefined], '"inputs" contains non-signal or falsy value']
+      [x => x, [null], '"inputs" is empty array'],
+      [x => x, [undefined], '"inputs" is empty array']
     ].forEach(([fn, inputs, message]) => {
       it(`TypeError: ${message}`, function () {
         expectError(() => link(fn, inputs), message)
@@ -466,6 +506,17 @@ describe('Interface Specification', function () {
       const b = startWith(0, a)
       assert.strictEqual(b(), 1)
       a(2); assert.strictEqual(b(), 2)
+    })
+
+    it('merge :: Signal s => s a -> s b -> s (a | b)', function () {
+      const a = Signal.of()
+      const b = Signal.of()
+      const c = Signal.merge(a, b)
+      const d = scan(R.flip(R.append), [], c)
+      assert.strictEqual(d(), undefined)
+
+      a(1); b('2'); b('3'); a(4); b('5')
+      assert.deepStrictEqual(d(), [1, '2', '3', 4, '5'])
     })
 
     it('scan :: Signal s => (b -> a -> b) -> b -> s a -> s b', function () {

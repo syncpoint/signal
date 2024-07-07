@@ -17,7 +17,8 @@ const run = () => {
 }
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);const filename = path.join(__dirname, '..', 'package.json');
+const __dirname = path.dirname(__filename);
+const filename = path.join(__dirname, '..', 'package.json');
 const version = JSON.parse(fs.readFileSync(filename, 'utf8')).version
 
 console.log(`@syncpoint/signal v${version}`, new Date())

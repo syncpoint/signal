@@ -345,8 +345,22 @@ fromListeners :: [String] -> Target -> Signal Event
 const a = Signal.of()
 const b = link(a => a + 1, a)
 const c = Signal.startWith(0, b)
-c() // 0
+c() //=> 0
 ```
+
+`merge` merges values of two signals into one resulting signal.
+
+```javascript
+// merge :: Signal s => s a -> s b -> s (a | b)
+const a = Signal.of()
+const b = Signal.of()
+const c = Signal.merge(a, b)
+const d = scan(R.flip(R.append), [], c)
+a(1); b('2'); b('3'); a(4); b('5')
+d() //=> [1, '2', '3', 4, '5']
+```
+
+
 
 `scan` feeds back the calculated signal value as an accumulator for the next value.
 
@@ -355,7 +369,7 @@ c() // 0
 const a = Signal.of()
 const b = Signal.scan((acc, a) => acc + a, 0, a)
 R.range(0, 10).forEach(a)
-b() // 45; sum 0..9
+b() //=> 45; sum 0..9
 ```
 
 `loop` is similar to `scan`, but the value for the accumulator and the returned signal value can be different.
@@ -369,7 +383,7 @@ const b = Signal.loop((xs, x) => {
   return [xs, average(xs)]
 }, [], a)
 R.range(0, 20).forEach(a)
-b() // 14.5; sum 10..19 / 10
+b() //=> 14.5; sum 10..19 / 10
 ```
 
 `lift` applies the values of *n* signals to a n-ary function. It might not be obvious, but `lift` is pretty much the same as `link`, expect for the signal parameters, which are not given as an array of signals, but individually.
@@ -379,7 +393,7 @@ b() // 14.5; sum 10..19 / 10
 const a = Signal.of()
 const b = Signal.of()
 const c = Signal.lift((a, b) => a + b, a, b)
-a(1); b(2); c() // 3
+a(1); b(2); c() //=> 3
 ```
 
 `tap` is used for side-effects while passing on the value (hopefully unchanged).
@@ -392,5 +406,5 @@ const fn = R.compose(
 )
 
 const a = fn(Signal.of(1))
-a() // 2
+a() //=> 2
 ```
