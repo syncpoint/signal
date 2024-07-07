@@ -366,7 +366,7 @@ describe('Interface Specification', function () {
       assert.strictEqual(a(), 3)
     })
 
-    it('filter :: Signal s => (a -> Boolean) -> s a -> s a', function () {
+    it('filter :: Signal s => (a -> boolean) -> s a -> s a', function () {
       const a = Signal.of()
       const b = R.filter(x => x % 2 === 0, a)
       const actual = recorder(b)
@@ -374,7 +374,7 @@ describe('Interface Specification', function () {
       assert.deepStrictEqual(actual(), ['2', '4'])
     })
 
-    it('reject :: Signal s => (a -> Boolean) -> s a -> s a', function () {
+    it('reject :: Signal s => (a -> boolean) -> s a -> s a', function () {
       const a = Signal.of()
       const b = R.reject(x => x % 2 === 0, a)
       const actual = recorder(b)
