@@ -2,7 +2,10 @@
 
 Time-varying values with acyclic static dependencies and synchronous glitch-free updates. **Signal** is heavily inspired by and in many aspects quite similar to [flyd](https://github.com/paldepind/flyd). Our thanks and appreciation go out to the people who provided this neat piece of software. Thank you guys!
 
-### Table of contents
+### Table of content
+
+<details>
+<summary>Expand</summary>
 
 * [Quickstart](#quickstart)
 * [Motivation](#motivation)
@@ -17,6 +20,8 @@ Time-varying values with acyclic static dependencies and synchronous glitch-free
 * [Fine-print: Error Handling](#fine-print-error-handling)
 * [Why signals and not streams?](#why-signals-and-not-streams)
 * [Miscellaneous Operators](#miscellaneous-operators)
+
+</details>
 
 #### Quickstart
 
