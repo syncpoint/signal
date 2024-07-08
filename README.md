@@ -109,7 +109,7 @@ And really, that's all there is to know. Except...
 
 Signal conforms to [Fantasy Land](https://github.com/fantasyland/fantasy-land) specification for algebraic structures in the following ways:
 
-* Filterable: `filter :: Signal s => (a -> Boolean) -> s a -> s a`
+* Filterable: `filter :: Signal s => (a -> boolean) -> s a -> s a`
 * Functor: `map :: Signal s => (a -> b) -> s a -> s b`
 * Apply: `ap :: Signal s => s (a -> b) -> s a -> s b`
 * Applicative: `of :: Signal s => a -> s a`

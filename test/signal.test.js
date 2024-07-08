@@ -366,7 +366,7 @@ describe('Interface Specification', function () {
       assert.strictEqual(a(), 3)
     })
 
-    it('filter :: Signal s => (a -> Boolean) -> s a -> s a', function () {
+    it('filter :: Signal s => (a -> boolean) -> s a -> s a', function () {
       const a = Signal.of()
       const b = R.filter(x => x % 2 === 0, a)
       const actual = recorder(b)
@@ -374,7 +374,7 @@ describe('Interface Specification', function () {
       assert.deepStrictEqual(actual(), ['2', '4'])
     })
 
-    it('reject :: Signal s => (a -> Boolean) -> s a -> s a', function () {
+    it('reject :: Signal s => (a -> boolean) -> s a -> s a', function () {
       const a = Signal.of()
       const b = R.reject(x => x % 2 === 0, a)
       const actual = recorder(b)
@@ -645,5 +645,38 @@ describe('Behavior', function () {
     b.on(() => called++)
     a(2); assert.strictEqual(called, 1)
     a(4); assert.strictEqual(called, 1)
+  })
+
+  describe('"equals" option', function () {
+    it('of (modulo)', function () {
+      const a = Signal.of(0, { equals: (a, b) => (a % 2) === (b % 2) })
+      const b = Signal.scan(R.flip(R.append), [], a)
+      ;[5, 3, 10, 0].map(a)
+      assert.deepStrictEqual(b(), [0, 5, 10])
+    })
+
+    it('of (distance)', function () {
+      // Consider to consecutive values as equal when their
+      // abolute difference (distance) is smaller than epsilon.
+      const epsilon = 0.2
+      const a = Signal.of(0, { equals: (a, b) => Math.abs(a - b) < epsilon })
+      const b =  Signal.scan(R.flip(R.append), [], a)
+      ;[4, 4.1, 4.15, 4.5].map(a)
+      assert.deepStrictEqual(b(), [0, 4, 4.5])
+    })
+
+    it('link', function () {
+      // Consider two consecutive strings to be equal when their
+      // absolute difference in length is smaller than delta.
+      const delta = 4
+      const equals = (a, b) => Math.abs(a.length - b.length ) < delta
+      const a = Signal.of('A')
+      const b = Signal.of('B')
+      const c = Signal.link(R.concat, [a, b], { equals })
+      a('AA'); assert.strictEqual(c(), 'AB')
+      b('BBBB') ; assert.strictEqual(c(), 'AABBBB')
+      b('BB') ; assert.strictEqual(c(), 'AABBBB')
+      a(''); assert.strictEqual(c(), 'BB')
+    })
   })
 })
