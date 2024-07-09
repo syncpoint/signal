@@ -3,6 +3,28 @@ import * as R from 'ramda'
 import { describe, it } from 'mocha'
 import { Signal as Wrapper } from 'signal-polyfill'
 
+let pending = false;
+let watcher = new Wrapper.subtle.Watcher(() => {
+  if (!pending) {
+    pending = true;
+    queueMicrotask(() => {
+      pending = false
+      flushPending()
+    })
+  }
+})
+
+function flushPending() {
+  for (const signal of watcher.getPending()) signal.get()
+  watcher.watch();
+}
+
+export function effect (cb) {
+  let c = new Wrapper.Computed(() => cb())
+  watcher.watch(c); c.get()
+  return () => watcher.unwatch(c)
+}
+
 const curry = fn => function rec (...args) {
   return args.length >= fn.length
     ? fn(...args)
@@ -36,9 +58,9 @@ const wrap = s => {
 const Signal = atom => {
   atom.constructor = Signal
   atom['fantasy-land/map'] = atom.map = fn => Signal.map(fn, atom)
-  atom['fantasy-land/ap'] = atom.ap = sfn => Signal.ap(sfn, atom)
-  // atom['fantasy-land/chain'] = atom.chain = fn => chain(fn, atom)
   atom['fantasy-land/filter'] = atom.filter = fn => Signal.filter(fn, atom)
+  // atom['fantasy-land/ap'] = atom.ap = sfn => Signal.ap(sfn, atom)
+  // atom['fantasy-land/chain'] = atom.chain = fn => chain(fn, atom)
   return atom
 }
 
@@ -65,7 +87,40 @@ Signal.of = value => {
   return Signal(atom)
 }
 
+/**
+ * map :: Signal s => (a -> b) -> s a -> s b
+ */
+Signal.map = curry((fn, signal) =>
+  Signal.link(a => fn(a), signal)
+)
+
+/**
+ * filter :: Signal s => (a -> boolean) -> s a -> s a
+ */
+Signal.filter = curry((fn, signal) => {
+  const self = Signal.of()
+  Signal.link(a => fn(a) && self(a), signal)
+  return self
+})
+
+/**
+ * scan :: Signal s => (b -> a -> b) -> b -> s a -> s b
+ */
+Signal.scan = curry((fn, acc, signal) =>
+  Signal.link(x => (acc = fn(acc, x)), signal)
+)
+
+
 describe.only('Polyfill', function () {
+
+  it.only('effect', () => {
+    const a = Signal.of(0)
+    effect(() => {
+      console.log(a())
+    })
+
+    a(1); a(2); a(3)
+  })
 
   it('input signal without value', function () {
 
@@ -149,5 +204,48 @@ describe.only('Polyfill', function () {
     const d = Signal.link((b, c) => b * c, [b, c])
     assert.strictEqual(d(), 6)
     a(2); assert.strictEqual(d(), 12)
+  })
+
+  describe('Fantasy Land', function () {
+    it('[2d75] map :: Signal s => (a -> b) -> s a -> s b', function () {
+      const a = Signal.of()
+      const b = R.map(x => x * 2, a)
+      assert.strictEqual(b(), undefined)
+      a(1); assert.strictEqual(b(), 2)
+      a(2); assert.strictEqual(b(), 4)
+    })
+
+    it('[af73] map :: Signal s => (a -> b) -> s a -> s b', function () {
+      const a = Signal.of(1)
+        .map(x => x * 2)
+        .map(x => x + 1)
+
+      assert.strictEqual(a(), 3)
+    })
+
+    // it('[ddba] filter :: Signal s => (a -> boolean) -> s a -> s a', function () {
+    //   const a = Signal.of()
+    //   const b = R.filter(x => x % 2 === 0, a)
+    //   const actual = recorder(b)
+    //   ;[2, 3, 4].forEach(a)
+    //   assert.deepStrictEqual(actual(), ['2', '4'])
+    // })
+
+    // it('[4982] reject :: Signal s => (a -> boolean) -> s a -> s a', function () {
+    //   const a = Signal.of()
+    //   const b = R.reject(x => x % 2 === 0, a)
+    //   const actual = recorder(b)
+    //   ;[1, 2, 3, 4].forEach(a)
+    //   assert.deepStrictEqual(actual(), ['1', '3'])
+    // })
+  })
+
+  describe('miscellaneous operators', function () {
+    it('[5450] scan :: Signal s => (b -> a -> b) -> b -> s a -> s b', function () {
+      const a = Signal.of()
+      const b = Signal.scan(R.add, 0, a)
+      R.range(0, 10).forEach(a)
+      assert.strictEqual(b(), 45)
+    })
   })
 })
