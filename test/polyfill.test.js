@@ -1,9 +1,71 @@
 import assert from 'assert'
-import { describe, it } from 'mocha'
 import * as R from 'ramda'
-import Signal from '../lib/index.js'
+import { describe, it } from 'mocha'
+import { Signal as Wrapper } from 'signal-polyfill'
 
-describe('algorithm', function () {
+const curry = fn => function rec (...args) {
+  return args.length >= fn.length
+    ? fn(...args)
+    : (...xs) => rec(...args, ...xs)
+}
+
+/**
+ * isDefined :: Signal s => s -> boolean
+ * isDefined :: Signal s => [s] -> boolean
+ */
+const isDefined = s =>
+  Array.isArray(s)
+    ? s.every(isDefined)
+    : s() !== undefined
+
+/**
+ * wrap :: (State t | Computed t) -> () -> t
+ * wrap :: (State t | Computed t) -> (T) -> Unit
+ */
+const wrap = s => {
+  const atom = (...args) => {
+    if (args.length === 0) return s.get()
+    else if (args.length === 1) return args[0] === undefined ? atom : s.set(args[0])
+    else atom
+  }
+
+  atom.wrapped = s
+  return atom
+}
+
+const Signal = atom => {
+  atom.constructor = Signal
+  atom['fantasy-land/map'] = atom.map = fn => Signal.map(fn, atom)
+  atom['fantasy-land/ap'] = atom.ap = sfn => Signal.ap(sfn, atom)
+  // atom['fantasy-land/chain'] = atom.chain = fn => chain(fn, atom)
+  atom['fantasy-land/filter'] = atom.filter = fn => Signal.filter(fn, atom)
+  return atom
+}
+
+/**
+ * link :: Signal s => (a -> b) -> s a -> s b
+ * link :: Signal s => (...[any] -> b) -> [s any] -> s b
+ */
+Signal.link = curry((fn, inputs) => {
+  inputs = Array.isArray(inputs) ? inputs : [inputs]
+  const atom = wrap(new Wrapper.Computed(() =>
+    isDefined(inputs)
+      ? fn(...inputs.map(s => s()))
+      : undefined
+  ))
+  return Signal(atom)
+})
+
+/**
+ * of :: Signal s => () -> s (* undefined Signal)
+ * of :: Signal s => t -> s
+ */
+Signal.of = value => {
+  const atom = wrap(new Wrapper.State(value))
+  return Signal(atom)
+}
+
+describe.only('Polyfill', function () {
 
   it('input signal without value', function () {
 
