@@ -9,6 +9,6 @@ const fileName = format =>
     : `${name}.es.js`
 
 const lib = { entry, name, fileName }
-const build = { lib }
+const build = { lib, sourcemap: true }
 
 export default defineConfig({ build })
