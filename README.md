@@ -68,7 +68,7 @@ For one of our projects we had to extent a rather complex OpenLayers interaction
 
 #### Introduction
 
-Signal provides two primitives: *Simple signals* `Signal.of` and *linked signals* `Signal.link`. Simple signals are just containers for a current value. In general, signals are only updated if the new value is strictly not equal (read `!==`) to its current value. One or more input signals can be linked to one output signal. The link function derives the output value from the input values. The output signal's value is automatically updated when at least one input signal's value has changed.
+Signal provides two primitives: *Input signals* `Signal.of` and *linked signals* `Signal.link`. An input signal is just a container for  a current value. In general, signals are only updated if the new value is not the same value as its current value. One or more input signals can be linked to one output signal. The link function derives the output value from the input values. The output signal's value is automatically updated when at least one input signal's value has changed.
 
 ```javascript
 const sum = (a, b) => a + b
@@ -101,6 +101,26 @@ const dispose = a.on(push)
 a(1); a(2); acc // [1, 2]
 dispose()
 a(3); acc // [1, 2] (unchanged)
+```
+
+The constructors `Signal.of` and `Signal.link` take both an optional `equals` option, which controls when two consecutive values are considered equal. `equals` option overrides the default of `Object.is`.
+
+```javascript
+const a = Signal.of(0, { equals: R.F }) // always different
+const b = Signal.scan(R.flip(R.append), [], a)
+R.range(0, 5).map(() => a(0))
+b() //=> [ 0, 0, 0, 0, 0, 0 ]
+```
+
+Other operators currently don't take an `equals` option, but it's always possible to explicitly set `equals` property on (derived) signals.
+
+```javascript
+const a = Signal.of(0)
+const b = a.map(R.add(1))
+b.equals = (a, b) => (a % 2) === (b % 2)
+const c = Signal.scan(R.flip(R.append), [], b)
+;[5, 3, 10, 0].map(a)
+c() //=> [ 1, 6, 11 ]
 ```
 
 And really, that's all there is to know. Except...
@@ -176,8 +196,6 @@ const c = Signal.scan(R.flip(R.append), [], b)
 ;[4, 1, -3, 8, 7].map(a)
 c() // [0, -12, 18]
 ```
-
-
 
 #### Nested signals, reads, writes
 
