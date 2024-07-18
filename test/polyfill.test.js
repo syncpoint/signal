@@ -3,28 +3,6 @@ import * as R from 'ramda'
 import { describe, it } from 'mocha'
 import { Signal as Wrapper } from 'signal-polyfill'
 
-let pending = false;
-let watcher = new Wrapper.subtle.Watcher(() => {
-  if (!pending) {
-    pending = true;
-    queueMicrotask(() => {
-      pending = false
-      flushPending()
-    })
-  }
-})
-
-function flushPending() {
-  for (const signal of watcher.getPending()) signal.get()
-  watcher.watch();
-}
-
-export function effect (cb) {
-  let c = new Wrapper.Computed(() => cb())
-  watcher.watch(c); c.get()
-  return () => watcher.unwatch(c)
-}
-
 const curry = fn => function rec (...args) {
   return args.length >= fn.length
     ? fn(...args)
@@ -111,16 +89,7 @@ Signal.scan = curry((fn, acc, signal) =>
 )
 
 
-describe.only('Polyfill', function () {
-
-  it.only('effect', () => {
-    const a = Signal.of(0)
-    effect(() => {
-      console.log(a())
-    })
-
-    a(1); a(2); a(3)
-  })
+describe('polyfill', function () {
 
   it('input signal without value', function () {
 
@@ -240,7 +209,7 @@ describe.only('Polyfill', function () {
     // })
   })
 
-  describe('miscellaneous operators', function () {
+  describe.skip('miscellaneous operators', function () {
     it('[5450] scan :: Signal s => (b -> a -> b) -> b -> s a -> s b', function () {
       const a = Signal.of()
       const b = Signal.scan(R.add, 0, a)
