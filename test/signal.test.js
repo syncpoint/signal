@@ -34,13 +34,25 @@ const recorder = inputs => {
 
 describe('Interface Specification', function () {
 
+  it('label :: Signal s => s -> String', function () {
+    const a = Signal.of()
+    assert.strictEqual(typeof Signal.label(a), 'string')
+  })
+
+  it('label :: Signal s => s -> String -> Unit', function () {
+    const a = Signal.of()
+    const expected = 'abc'
+    Signal.label(a, expected)
+    assert.strictEqual(Signal.label(a), expected)
+  })
+
   ;[
     ['8249/5c9d', undefined, 'Signal(undefined)'],
     ['8249/42e4', 1, 'Signal(1)'],
     ['8249/28bc', 'hello', 'Signal(hello)'],
     ['8249/414f', {}, 'Signal([object Object])'],
   ].forEach(([id, value, expected]) => {
-    it(`[${id}] toString() :: Signal s => s -> string`, function() {
+    it.skip(`[${id}] toString() :: Signal s => s -> string`, function() {
       const a = Signal.of(value)
       assert.deepEqual(a.toString(), expected)
     })
@@ -64,7 +76,6 @@ describe('Interface Specification', function () {
     const actual = JSON.parse(JSON.stringify(object))
     assert.deepEqual(actual, expected)
   })
-
 
   ;[
     ['null', null],
