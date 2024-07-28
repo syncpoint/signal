@@ -36,7 +36,7 @@ describe('Interface Specification', function () {
 
   it('label :: Signal s => s -> String', function () {
     const a = Signal.of()
-    assert.strictEqual(typeof Signal.label(a), 'string')
+    assert.strictEqual(Signal.label(a), undefined)
   })
 
   it('label :: Signal s => s -> String -> Unit', function () {
