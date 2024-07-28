@@ -2,6 +2,7 @@
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
+import assert from 'assert'
 import { fileURLToPath } from 'url';
 import * as bench from 'micro-bmark'
 import Signal from '../lib/index.js'
@@ -10,10 +11,13 @@ import { encode, decode, parallelAdder } from './adder.js'
 const operand = () => Math.ceil(Math.random() * 32768)
 
 const run = () => {
+  const i0 = operand()
+  const i1 = operand()
   const { a, b, s, cout } = parallelAdder(Signal.of(0))
-  encode(operand()).forEach((v, i) => a[i](v))
-  encode(operand()).forEach((v, i) => b[i](v))
-  decode([...s.map(s => s()), cout()])
+  encode(i0).forEach((v, i) => a[i](v))
+  encode(i1).forEach((v, i) => b[i](v))
+  const actual = decode([...s.map(s => s()), cout()])
+  assert.strictEqual(actual, i0 + i1)
 }
 
 const __filename = fileURLToPath(import.meta.url);

@@ -20,16 +20,26 @@ export const encode = R.compose(
   toString(2)
 )
 
-const fullAdder = ([a, b, cin]) => {
+const fullAdder = ([a, b, cin], i) => {
   const x = xor(a, b)
   const s = xor(x, cin)
-  const cout = or(and(x, cin), and(a, b))
+  const and0 = and(x, cin)
+  const and1 = and(a, b)
+  const cout = or(and0, and1)
+  Signal.label(x, `xor_${i}:0`)
+  Signal.label(s, `xor_${i}:1`)
+  Signal.label(and0, `and_${i}:0`)
+  Signal.label(and1, `and_${i}:1`)
+  Signal.label(cout, `or_${i}`)
   return [s, cout]
 }
 
-export const parallelAdder = cin => R.range(0, 16).reduce(acc => {
+export const parallelAdder = cin => R.range(0, 16).reduce((acc, i) => {
   const ab = [Signal.of(), Signal.of()]
-  const [s, cout] = fullAdder([...ab, acc.cout])
+  Signal.label(ab[0], `a_${i}`)
+  Signal.label(ab[1], `b_${i}`)
+
+  const [s, cout] = fullAdder([...ab, acc.cout], i)
   acc.a.push(ab[0]); acc.b.push(ab[1]); acc.s.push(s)
   acc.cout = cout
   return acc
