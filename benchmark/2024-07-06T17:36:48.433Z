@@ -1,5 +1,0 @@
-CPU: Apple M2
-OS: Darwin Kernel Version 23.5.0: Wed May  1 20:19:05 PDT 2024; root:xnu-10063.121.3~5/RELEASE_ARM64_T8112
-RAM: rss=65.6mb heap=17.1mb used=9.9mb arr=0.4mb
-16-bit full adder x 977 ops/sec @ 1ms/op ± 1.26% (min: 1ms, max: 1ms)
-RAM: rss=66.4mb heap=17.3mb used=10.7mb arr=0.4mb

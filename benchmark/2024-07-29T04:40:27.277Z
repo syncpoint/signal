@@ -1,0 +1,18 @@
+@syncpoint/signal v1.2.0 2024-07-29T04:40:27.277Z
+CPU: Apple M2
+OS: Darwin Kernel Version 23.5.0: Wed May  1 20:19:05 PDT 2024; root:xnu-10063.121.3~5/RELEASE_ARM64_T8112
+RAM: rss=64.1mb heap=17.6mb used=10.2mb arr=0.4mb
+### JIT COMPILER WARM-UP (ignore) ### x 291,885 ops/sec @ 3μs/op ± 18.33% (min: 1μs, max: 2ms)
+[80cd] x 5,952,380 ops/sec @ 168ns/op ± 21.78% (min: 83ns, max: 184μs)
+[4e38] x 6,622,516 ops/sec @ 151ns/op ± 22.85% (min: 42ns, max: 171μs)
+[a642] x 2,427,184 ops/sec @ 412ns/op ± 25.97% (min: 167ns, max: 482μs)
+[3155] x 2,155,172 ops/sec @ 464ns/op ± 13.49% (min: 250ns, max: 233μs)
+[4568] x 6,097,560 ops/sec @ 164ns/op ± 34.11% (min: 83ns, max: 279μs)
+[9a8c] x 1,672,240 ops/sec @ 598ns/op ± 14.19% (min: 375ns, max: 248μs)
+[44b2] x 1,201,923 ops/sec @ 832ns/op ± 12.53% (min: 458ns, max: 342μs)
+[96f2] x 1,048,218 ops/sec @ 954ns/op ± 8.09% (min: 625ns, max: 193μs)
+[ee70] x 1,231,527 ops/sec @ 812ns/op ± 12.26% (min: 500ns, max: 400μs)
+[bd93] x 299,760 ops/sec @ 3μs/op ± 4.38% (min: 2μs, max: 424μs)
+[62cb] x 12,314 ops/sec @ 81μs/op ± 11.71% (min: 65μs, max: 481μs)
+[4357] x 5 ops/sec @ 181ms/op
+RAM: rss=109.1mb heap=47.7mb used=21.9mb
