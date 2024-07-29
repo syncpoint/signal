@@ -1,0 +1,32 @@
+@syncpoint/signal v1.3.0 2024-07-29T05:38:42.955Z
+CPU: Apple M2
+OS: Darwin Kernel Version 23.5.0: Wed May  1 20:19:05 PDT 2024; root:xnu-10063.121.3~5/RELEASE_ARM64_T8112
+RAM: rss=67.2mb heap=26.2mb used=6.8mb
+### JIT COMPILER WARM-UP (ignore) ### x 324,359 ops/sec @ 3μs/op ± 18.19% (min: 1μs, max: 2ms)
+[80cd] x 5,050,505 ops/sec @ 198ns/op ± 31.57% (min: 83ns, max: 235μs)
+[4e38] x 5,291,005 ops/sec @ 189ns/op ± 43.01% (min: 83ns, max: 349μs)
+[a642] x 1,776,198 ops/sec @ 563ns/op ± 22.89% (min: 208ns, max: 467μs)
+[3155] x 1,655,629 ops/sec @ 604ns/op ± 14.52% (min: 250ns, max: 284μs)
+[4568] x 6,493,506 ops/sec @ 154ns/op ± 26.11% (min: 41ns, max: 195μs)
+[9a8c] x 1,683,501 ops/sec @ 594ns/op ± 11.87% (min: 375ns, max: 197μs)
+[44b2] x 1,282,051 ops/sec @ 780ns/op ± 9.39% (min: 500ns, max: 203μs)
+[96f2] x 1,023,541 ops/sec @ 977ns/op ± 11.25% (min: 625ns, max: 417μs)
+[ee70] x 1,230,012 ops/sec @ 813ns/op ± 9.72% (min: 541ns, max: 178μs)
+[bd93] x 302,114 ops/sec @ 3μs/op ± 4.45% (min: 2μs, max: 445μs)
+[62cb] x 11,968 ops/sec @ 83μs/op ± 12.04% (min: 65μs, max: 492μs)
+[4357] x 5 ops/sec @ 187ms/op
+RAM: rss=113.5mb heap=51.9mb used=31.0mb
+
+Legend:
+[80cd] of :: Signal s => () -> s
+[4e38] of :: Signal s => v -> s v
+[a642] link :: Signal s => (a -> b) -> s a -> s b
+[3155] link :: Signal s => (...[*] -> b) -> [s *] -> s b
+[4568] set :: Signal s => v -> s v
+[9a8c] link :: Signal s => (...[*] -> b) -> [s *] -> s b
+[44b2] link :: Signal s => (...[*] -> b) -> [s *] -> s b
+[96f2] link :: Signal s => (...[*] -> b) -> [s *] -> s b
+[ee70] diamond
+[bd93] diamond/extended
+[62cb] 16-bit adder
+[4357] matrix (4 x 20)
