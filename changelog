@@ -1,3 +1,7 @@
+1.3.0
+* dedicated µ-benchbarks
+* improved update algorithm (topological sort)
+
 1.2.0
 * support ES6 and UMD/CJS module formats
 * support transducer protocol
