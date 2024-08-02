@@ -1,7 +1,7 @@
 {
   "id": "64d00de7-2ead-42e9-8c63-16c82e3611ab",
   "name": "@syncpoint/signal",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "type": "module",
   "description": "Algebraic type for time varying values",
   "files": [

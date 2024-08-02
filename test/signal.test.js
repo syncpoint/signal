@@ -2,35 +2,11 @@ import assert from 'assert'
 import { describe, it } from 'mocha'
 import * as R from 'ramda'
 import Signal from '../lib/index.js'
-
-const {
-  isSignal,
-  link, chain, startWith, scan, tap, loop, lift,
-  fromListeners
-} = Signal
-
-const hasValue = (x, v) =>
-  isSignal(x) && x() === v
-
-const diamond = (fn, input) => link(fn, [
-  link(a => a + 1, input),
-  link(a => a + 2, input)
-])
-
-const expectError = (fn, message) => {
-  try {
-    fn()
-    assert.fail('expected error not raised')
-  } catch (err) {
-    assert.strictEqual(err.message, message)
-  }
-}
-
-const recorder = inputs => {
-  const acc = []
-  link((...values) => acc.push(values.join(':')), inputs)
-  return () => acc
-}
+import sleep from './sleep.js'
+import recorder from './recorder.js'
+import hasValue from './hasValue.js'
+import diamond from './diamond.js'
+import expectError from './expectError.js'
 
 describe('Interface Specification', function () {
 
@@ -104,6 +80,34 @@ describe('Interface Specification', function () {
     })
   })
 
+  it('[0ce9] deferred :: Signal s => v -> s v', async function () {
+    const expected = 3
+    const s = Signal.deferred(expected)
+    await sleep()
+    assert.strictEqual(s(), expected)
+  })
+
+  it('[4e40] deferred :: Signal s => () -> v -> s v', async function () {
+    const expected = 3
+    const s = Signal.deferred(() => expected)
+    await sleep()
+    assert.strictEqual(s(), expected)
+  })
+
+  it('[95ad] deferred :: Signal s, Promise p => p v -> s v', async function () {
+    const expected = 3
+    const s = Signal.deferred(Promise.resolve(3))
+    await sleep()
+    assert.strictEqual(s(), expected)
+  })
+
+  it('[4308] deferred :: Signal s, Promise p => () -> p v -> s v', async function () {
+    const expected = 3
+    const s = Signal.deferred(() => Promise.resolve(3))
+    await sleep()
+    assert.strictEqual(s(), expected)
+  })
+
   ;[
     ['475c/448c', undefined, null],
     ['475c/b52f', undefined, 1],
@@ -146,7 +150,7 @@ describe('Interface Specification', function () {
       [x => x, [undefined], '"inputs" is empty array']
     ].forEach(([fn, inputs, message]) => {
       it(`TypeError: ${message}`, function () {
-        expectError(() => link(fn, inputs), message)
+        expectError(() => Signal.link(fn, inputs), message)
       })
     })
   })
@@ -154,7 +158,7 @@ describe('Interface Specification', function () {
   describe('link :: Signal s => (...[any] -> b) -> [s any] -> s b', function () {
     it('read-only', function () {
       const input = Signal.of(1)
-      const output = link(a => a + 1, input)
+      const output = Signal.link(a => a + 1, input)
       expectError(() => output(3), 'read-only signal')
     })
 
@@ -200,9 +204,9 @@ describe('Interface Specification', function () {
     ].forEach(([initial, expected]) => {
       it(`Evaluation count/set [diamond] (${initial})`, function () {
         const a = Signal.of(initial)
-        const b = link(a => a + 1, [a])
-        const c = link(a => a + 2, [a])
-        const d = link((b, c) => b * c, [b, c])
+        const b = Signal.link(a => a + 1, [a])
+        const c = Signal.link(a => a + 2, [a])
+        const d = Signal.link((b, c) => b * c, [b, c])
         const actual = recorder(d)
         a(2)
         assert.deepStrictEqual(actual(), expected)
@@ -212,10 +216,10 @@ describe('Interface Specification', function () {
     it('[7a82] Evaluation count/set [diamond/extended]', function () {
       // Verify topological sort/order works as expected.
       const a = Signal.of()
-      const b = link(a => a + 1, [a])
-      const c = link(a => a + 2, [a])
-      const d = link(c => c + 3, [c])
-      const e = link((b, d) => b + d, [b, d])
+      const b = Signal.link(a => a + 1, [a])
+      const c = Signal.link(a => a + 2, [a])
+      const d = Signal.link(c => c + 3, [c])
+      const e = Signal.link((b, d) => b + d, [b, d])
       const actual = recorder(e)
       ;[1, 5, 11].forEach(a)
       assert.deepStrictEqual(actual(), ['8', '16', '28'])
@@ -228,7 +232,7 @@ describe('Interface Specification', function () {
     ].forEach(([label, initial, fn, expected]) => {
       it(`Evaluation value/of (${label}) (${initial})`, function () {
         const inputs = initial.map(Signal.of)
-        const output = link(fn, inputs)
+        const output = Signal.link(fn, inputs)
         assert.strictEqual(output(), expected)
       })
     })
@@ -246,7 +250,7 @@ describe('Interface Specification', function () {
     ].forEach(([label, initial, next, fn, expected]) => {
       it(`Evaluation value/set (${label}) (${initial})`, function () {
         const inputs = initial.map(Signal.of)
-        const output = link(fn, inputs)
+        const output = Signal.link(fn, inputs)
         next.forEach((value, i) => inputs[i](value))
         assert.strictEqual(output(), expected)
       })
@@ -262,9 +266,9 @@ describe('Interface Specification', function () {
       const actual = []
       const push = label => x => actual.push(`${label}:${x}`)
       const input = Signal.of(1)
-      link(push('A'), input)
-      link(push('B'), input)
-      link(push('C'), input)
+      Signal.link(push('A'), input)
+      Signal.link(push('B'), input)
+      Signal.link(push('C'), input)
 
       input(2)
       const expected = [
@@ -281,17 +285,17 @@ describe('Interface Specification', function () {
       const actual = []
       const push = label => x => actual.push(`${label}:${x}`)
       const input = Signal.of(1)
-      link(push('A'), [input])
-      const output = link(a => {
+      Signal.link(push('A'), [input])
+      const output = Signal.link(a => {
         push('B')(a)
         const inner = Signal.of(a + 1)
-        link(push('D'), [inner])
+        Signal.link(push('D'), [inner])
         inner(a + 2)
         push('C')(a)
         return inner()
       }, [input])
 
-      link(push('E'), [input])
+      Signal.link(push('E'), [input])
       const expected = ['A:1', 'B:1', 'D:2', 'D:3', 'C:1', 'E:1']
       assert.deepStrictEqual(actual, expected)
       assert.strictEqual(output(), 3)
@@ -299,7 +303,7 @@ describe('Interface Specification', function () {
 
     it('[4ed9] atomic update: plain signal', function () {
       const input = Signal.of(1)
-      const output = link(x => Signal.of(x)(), [input])
+      const output = Signal.link(x => Signal.of(x)(), [input])
 
       assert.strictEqual(input(), 1, 'input: unexpected value')
       assert.strictEqual(output(), 1, 'output: unexpected value')
@@ -307,7 +311,7 @@ describe('Interface Specification', function () {
 
     it('[bd07] atomic update: linked signal', function () {
       const input = Signal.of(1)
-      const output = link(x => link(a => a + 1, [Signal.of(x)])(), [input])
+      const output = Signal.link(x => Signal.link(a => a + 1, [Signal.of(x)])(), [input])
       assert.strictEqual(output(), 2)
     })
 
@@ -317,8 +321,8 @@ describe('Interface Specification', function () {
       const a = Signal.of()
       const b = Signal.of()
 
-      link(a => actual.push(`[2]:${a}:${flag()}`), [a])
-      link(b => {
+      Signal.link(a => actual.push(`[2]:${a}:${flag()}`), [a])
+      Signal.link(b => {
         actual.push(`[1]:${b}`)
         flag(true)
         a(2)
@@ -333,16 +337,16 @@ describe('Interface Specification', function () {
 
     it('[40c9] unnamed', function () {
       const a = Signal.of()
-      const b = link(a => a + 1, [a])
-      const c = link((a, b) => a * b, [a, b])
+      const b = Signal.link(a => a + 1, [a])
+      const c = Signal.link((a, b) => a * b, [a, b])
       a(2); assert.strictEqual(c(), 6)
     })
 
     it('[4654] nested write', function () {
       const a = Signal.of(1) // immediately overwritten by 2
       const b = Signal.of()
-      link(a, [b]) // [L1] aka link(b => a(b), b)
-      const c = link((a, b) => a + b, [a, b]) // [L2]
+      Signal.link(a, [b]) // [L1] aka Signal.link(b => a(b), b)
+      const c = Signal.link((a, b) => a + b, [a, b]) // [L2]
       // L1 is executed before L2; thus L2 is only evaluated
       // once with a=2, b=2.
       b(2); assert.strictEqual(c(), 4)
@@ -417,7 +421,7 @@ describe('Interface Specification', function () {
       const actual = await new Promise(resolve => {
         const acc = []
         const push = x => acc.push(x)
-        link(push, output)
+        Signal.link(push, output)
 
         const ticks = [
           () => input(a), () => a(1), () => a(2), () => a(3),
@@ -478,7 +482,7 @@ describe('Interface Specification', function () {
     it('[ae26] startWith :: Signal s => a -> s a -> s a', function () {
       // Initial value if signal is undefined.
       const a = Signal.of()
-      const b = startWith(0, a)
+      const b = Signal.startWith(0, a)
       assert.strictEqual(b(), 0)
       a(1); assert.strictEqual(b(), 1)
     })
@@ -486,7 +490,7 @@ describe('Interface Specification', function () {
     it('[46de] startWith :: Signal s => (() -> a) -> s a -> s a', function () {
       // Initial value (from function) if signal is undefined.
       const a = Signal.of()
-      const b = startWith(() => 0, a)
+      const b = Signal.startWith(() => 0, a)
       assert.strictEqual(b(), 0)
       a(1); assert.strictEqual(b(), 1)
     })
@@ -494,8 +498,8 @@ describe('Interface Specification', function () {
     it('[46de] startWith :: Signal s => a -> s a -> s a', function () {
       // Initial value for linked signal.
       const a = Signal.of()
-      const b = link(a => a + 1, [a])
-      const c = startWith(0, b)
+      const b = Signal.link(a => a + 1, [a])
+      const c = Signal.startWith(0, b)
       assert.strictEqual(c(), 0)
       a(1); assert.strictEqual(c(), 2)
     })
@@ -503,7 +507,7 @@ describe('Interface Specification', function () {
     it('[b308] startWith :: Signal s => a -> s a -> s a', function () {
       // Initial value is ignored if signal is defined.
       const a = Signal.of(1)
-      const b = startWith(0, a)
+      const b = Signal.startWith(0, a)
       assert.strictEqual(b(), 1)
       a(2); assert.strictEqual(b(), 2)
     })
@@ -512,7 +516,7 @@ describe('Interface Specification', function () {
       const a = Signal.of()
       const b = Signal.of()
       const c = Signal.merge(a, b)
-      const d = scan(R.flip(R.append), [], c)
+      const d = Signal.scan(R.flip(R.append), [], c)
       assert.strictEqual(d(), undefined)
 
       a(1); b('2'); b('3'); a(4); b('5')
@@ -521,7 +525,7 @@ describe('Interface Specification', function () {
 
     it('scan :: Signal s => (b -> a -> b) -> b -> s a -> s b', function () {
       const a = Signal.of()
-      const b = scan((acc, a) => acc + a, 0, a)
+      const b = Signal.scan((acc, a) => acc + a, 0, a)
       R.range(0, 10).forEach(a)
       assert.strictEqual(b(), 45)
     })
@@ -529,7 +533,7 @@ describe('Interface Specification', function () {
     it('tap :: Signal s => (a -> any) -> s a -> s a', function () {
       let actual = 0
       const a = Signal.of()
-      const b = tap(a => (actual += a), a)
+      const b = Signal.tap(a => (actual += a), a)
       R.range(0, 10).forEach(a)
       assert.strictEqual(actual, 45)
       assert.strictEqual(b(), 9)
@@ -538,7 +542,7 @@ describe('Interface Specification', function () {
     it('loop :: Signal s => (b -> a -> [b, c]) -> b -> s a -> s c', function () {
       const average = xs => xs.reduce((a, b) => a + b) / xs.length
       const a = Signal.of()
-      const b = loop((xs, x) => {
+      const b = Signal.loop((xs, x) => {
         xs.push(x); xs = xs.slice(-10)
         return [xs, average(xs)]
       }, [], a)
@@ -549,7 +553,7 @@ describe('Interface Specification', function () {
     it('lift :: Signal s => ((a -> b -> ...) -> x) -> s a -> s b -> ... -> s x', function () {
       const a = Signal.of()
       const b = Signal.of()
-      const c = lift((a, b) => a + b, a, b)
+      const c = Signal.lift((a, b) => a + b, a, b)
       a(1); b(2); assert.strictEqual(c(), 3)
       a(3); assert.strictEqual(c(), 5)
       b(1); assert.strictEqual(c(), 4)
@@ -586,8 +590,8 @@ describe('Interface Specification', function () {
         }, {})
 
         const input = Signal.of()
-        const output = chain(x => {
-          return emitters[x] && fromListeners(['event'], emitters[x])
+        const output = Signal.chain(x => {
+          return emitters[x] && Signal.fromListeners(['event'], emitters[x])
         }, input)
 
         const actual = await new Promise(resolve => {
@@ -604,7 +608,7 @@ describe('Interface Specification', function () {
             resolve(acc)
           }, 0)
 
-          link(x => acc.push(x), output)
+          Signal.link(x => acc.push(x), output)
         })
 
         const expected = [
