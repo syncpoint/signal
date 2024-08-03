@@ -16,10 +16,15 @@ describe('Interface Specification', function () {
     ['8249/28bc', 'hello', 'Signal(hello)'],
     ['8249/414f', {}, 'Signal([object Object])'],
   ].forEach(([id, value, expected]) => {
-    it(`[${id}] toString() :: Signal s => s -> string`, function() {
+    it(`[${id}] toString() :: Signal s => s -> String`, function() {
       const a = Signal.of(value)
       assert.deepEqual(a.toString(), expected)
     })
+  })
+
+  it('[4ddf] toString() :: Signal s => s -> String', function () {
+    const a = Signal.of(0, { label: 'a' })
+    assert.strictEqual(a.toString(), 'Signal[a](0)')
   })
 
   it('[8a4a] toJSON :: Signal s -> JSON', function() {
@@ -756,6 +761,47 @@ describe('Behavior', function () {
       b('BBBB') ; assert.strictEqual(c(), 'AABBBB')
       b('BB') ; assert.strictEqual(c(), 'AABBBB')
       a(''); assert.strictEqual(c(), 'BB')
+    })
+  })
+
+  describe('"label" option', function () {
+    it('of', function () {
+      const a = Signal.of(0, { label: 'a' })
+      assert.deepStrictEqual(a.__label, 'a')
+    })
+
+    it('link', function () {
+      const a = Signal.of()
+      const b = Signal.link(a => a + 1, [a], { label: 'b' })
+      assert.deepStrictEqual(b.__label, 'b')
+    })
+  })
+
+  describe('options', function () {
+    it('options :: Signal s => s -> {k: v} -> s', function () {
+      const a = Signal.of(1)
+      const b = a.map(R.modulo(2))
+      const expected = { equals: R.F, label: 'b' }
+      Signal.options(b, expected)
+      assert.strictEqual(b.__equals, R.F)
+      assert.strictEqual(b.__label, 'b')
+    })
+
+    it('options :: Signal s => s -> {k: v} -> s', function () {
+      const a = Signal.of(1)
+      const b = a.map(R.modulo(2))
+      const expected = { equals: R.F, label: 'b' }
+      Signal.options(b, expected)
+      const actual = Signal.options(b)
+      assert.deepStrictEqual(actual, expected)
+    })
+
+    it('options :: [undefined signature]', function () {
+      const a = Signal.of(1)
+      const b = a.map(R.modulo(2))
+      const expected = { equals: R.F, label: 'b' }
+      const actual = Signal.options(b, expected, 'invalid')
+      assert.equal(actual, b)
     })
   })
 })
