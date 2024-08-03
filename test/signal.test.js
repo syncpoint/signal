@@ -762,6 +762,15 @@ describe('Behavior', function () {
       b('BB') ; assert.strictEqual(c(), 'AABBBB')
       a(''); assert.strictEqual(c(), 'BB')
     })
+
+    it('deferred', function () {
+      const a = Signal.deferred(() => Promise.resolve(1), { equals: R.F })
+      const b = Signal.scan(R.flip(R.append), [], a)
+      setImmediate(() => {
+        R.range(0, 4).forEach(() => a(1))
+        assert.deepStrictEqual(b(), [1, 1, 1, 1, 1])
+      })
+    })
   })
 
   describe('"label" option', function () {
