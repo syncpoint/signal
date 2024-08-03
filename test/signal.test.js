@@ -440,7 +440,82 @@ describe('Interface Specification', function () {
       const expected = R.range(1, 10)
       assert.deepStrictEqual(actual, expected)
     })
+
+    // Setoid.
+
+    it('[f9fd] equals :: Signal s => s a -> s b -> Boolean (reflexivity)', function () {
+      const a = Signal.of(3)
+      assert.strictEqual(a['fantasy-land/equals'](a), true)
+    })
+
+    it('[acad] equals :: Signal s => s a -> s b -> Boolean (symmetry)', function () {
+      const a = Signal.of(3)
+      const b = Signal.of(3)
+      assert.strictEqual(a['fantasy-land/equals'](b), b['fantasy-land/equals'](a))
+    })
+
+    it('[50d0] equals :: Signal s => s a -> s b -> Boolean (symmetry)', function () {
+      const a = Signal.of(2)
+      const b = Signal.of(3)
+      assert.strictEqual(a['fantasy-land/equals'](b), b['fantasy-land/equals'](a))
+    })
+
+    it('[8b7b] equals :: Signal s => s a -> s b -> Boolean (transitivity)', function () {
+      const a = Signal.of(3)
+      const b = Signal.of(3)
+      const c = Signal.of(3)
+
+      const actual = [
+        a['fantasy-land/equals'](b),
+        b['fantasy-land/equals'](c),
+        a['fantasy-land/equals'](c)
+      ]
+
+      assert.deepStrictEqual(actual, [true, true, true])
+    })
+
+    // Ord.
+
+    it('[6e3a] lte :: Signal s => s a -> s b -> Boolean (totality)', function () {
+      const a = Signal.of(3)
+      const b = Signal.of(4)
+      assert(a['fantasy-land/lte'](b) || b['fantasy-land/lte'](a))
+    })
+
+    it('[6e3a] lte :: Signal s => s a -> s b -> Boolean (totality)', function () {
+      const a = Signal.of(4)
+      const b = Signal.of(3)
+      assert(a['fantasy-land/lte'](b) || b['fantasy-land/lte'](a))
+    })
+
+    it('[6e3a] lte :: Signal s => s a -> s b -> Boolean (antisymmetry)', function () {
+      const a = Signal.of(3)
+      const b = Signal.of(3)
+
+      const actual = [
+        a['fantasy-land/lte'](b),
+        b['fantasy-land/lte'](a),
+        a['fantasy-land/equals'](b)
+      ]
+
+      assert.deepStrictEqual(actual, [true, true, true])
+    })
+
+    it('[722c] lte :: Signal s => s a -> s b -> Boolean (transitivity)', function () {
+      const a = Signal.of(1)
+      const b = Signal.of(2)
+      const c = Signal.of(3)
+
+      const actual = [
+        a['fantasy-land/lte'](b),
+        b['fantasy-land/lte'](c),
+        a['fantasy-land/lte'](c)
+      ]
+
+      assert.deepStrictEqual(actual, [true, true, true])
+    })
   })
+
 
   describe('transducer [Ramda]', function () {
     it('map', function () {
