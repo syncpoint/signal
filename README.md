@@ -30,18 +30,6 @@ npm install @syncpoint/signal
 npm install ramda # optional
 ```
 
-Signal supports modules compatible with ES6 `import` and UMD/CJS `require`.
-
-```javascript
-import Signal from '@syncpoint/signal' // ES6
-```
-
-Or
-
-```javascript
-const Signal = require('@syncpoint/signal') // UMD/CJS
-```
-
 Combining two input signal is as simple as
 
 ```javascript
@@ -49,7 +37,7 @@ import Signal from '@syncpoint/signal'
 const a = Signal.of(3)
 const b = Signal.of(2)
 const c = Signal.link((a, b) => a * b, [a, b])
-b(4) // 12
+b(4) //=> 12
 ```
 
 BTW: Signal has **no** runtime dependencies.
@@ -68,25 +56,32 @@ For one of our projects we had to extent a rather complex OpenLayers interaction
 
 #### Introduction
 
-Signal provides two primitives: *Input signals* `Signal.of` and *linked signals* `Signal.link`. An input signal is just a container for  a current value. In general, signals are only updated if the new value is not the same value as its current value. One or more input signals can be linked to one output signal. The link function derives the output value from the input values. The output signal's value is automatically updated when at least one input signal's value has changed.
+Signal provides two primitives: *Input signals* `Signal.of` and *linked signals* `Signal.link`. An input signal is just a container for  a current value. **In general, signals are only updated if the new value is not the same value as its current value.** One or more input signals can be linked to one output signal. The link function derives the output value from the input values. The output signal's value is automatically updated when at least one input signal's value has changed.
 
 ```javascript
 const sum = (a, b) => a + b
 const a = Signal.of(39)
 const b = Signal.of(3)
 const c = Signal.link(sum, [a, b])
-c() // 42
-a(3); c() // 6
+c() //=> 42
+a(3); c() //=> 6
 ```
 
 A signal is basically a function where the 0-ary form returns the signal's current value, and 1-ary form updates the current value. Linked signals are read-only and cannot be updated explicitly. Naturally, linked signals can be used as input signals for other linked signals.
 
 ```javascript
-const { link } = Signal
 const a = Signal.of(1)
-const b = link(a => a + 1, a)
-const c = link(b => b * 2, b)
-c() // 4
+const b = Signal.link(a => a + 1, a)
+const c = Signal.link(b => b * 2, b)
+c() //=> 4
+```
+
+Signals can be initialized asynchronously. `Signal.deferred` accepts either a value or a promise or a function which returns a value or a promise. Note: If the signal should asynchronously be initialized with a function value, it must be provided as a promise and cannot be given directly as a value.
+
+```javascript
+const a = Signal.deferred(() => Promise.resolve(42))
+console.log(a()) //=> undefined
+setImmediate(() => console.log(a())) //=> 42
 ```
 
 Side-effects can be triggered with `Signal.on`. The side-effect function is invoked every time the signal value changes. `Signal.on` returns a function which, when called, removes the effect from the signal's dependent list, so it is no longer called.
@@ -98,12 +93,12 @@ const push = x => acc.push(x)
 
 // Hint: a.on(fn) is the same as Signal.on(fn, a)
 const dispose = a.on(push)
-a(1); a(2); acc // [1, 2]
+a(1); a(2); acc //=> [1, 2]
 dispose()
-a(3); acc // [1, 2] (unchanged)
+a(3); acc //=> [1, 2] (unchanged)
 ```
 
-The constructors `Signal.of` and `Signal.link` take both an optional `equals` option, which controls when two consecutive values are considered equal. `equals` option overrides the default of `Object.is`.
+The constructors `Signal.of`, `Signal.link` and `Signal.deferred` take all an optional `equals` option, which controls when two consecutive values are considered equal. `equals` option overrides the default of `Object.is`.
 
 ```javascript
 const a = Signal.of(0, { equals: R.F }) // always different
@@ -112,12 +107,12 @@ R.range(0, 5).map(() => a(0))
 b() //=> [ 0, 0, 0, 0, 0, 0 ]
 ```
 
-Other operators currently don't take an `equals` option, but it's always possible to explicitly set `equals` property on (derived) signals.
+Other operators currently don't take an `equals` option, but it's always possible to explicitly set `equals` option on (derived) signals with `Signal.options`.
 
 ```javascript
 const a = Signal.of(0)
 const b = a.map(R.add(1))
-b.equals = (a, b) => (a % 2) === (b % 2)
+Signal.options(b, { equals: (a, b) => (a % 2) === (b % 2) })
 const c = Signal.scan(R.flip(R.append), [], b)
 ;[5, 3, 10, 0].map(a)
 c() //=> [ 1, 6, 11 ]
@@ -144,7 +139,7 @@ const a = Signal.of(3)
   .map(x => x * 2)
   .chain(Signal.of)
   .ap(Signal.of(x => x > 4))
-a() // true
+a() //=> true
 ```
 
 Although `filter`, `map`, etc. are exposed as curried functions under the Signal namespace, e.g. `Signal.map`, we prefer using a third-party library like Ramda for point-free style.
@@ -160,7 +155,7 @@ const fn = R.compose(
 )
 
 const a = fn(Signal.of(3))
-a() // true
+a() //=> true
 ```
 
 #### Signal supports transducer protocol
@@ -178,7 +173,7 @@ const a = Signal.of()
 const b = Signal.transduce(R.drop(3), a)
 const c = Signal.scan(R.flip(R.append), [], b)
 R.range(1, 7).map(a)
-c() // [4, 5, 6]
+c() //=> [4, 5, 6]
 ```
 
 Composing transducers is more efficient than introducing intermediate signal in a long chain of transformations.
@@ -194,7 +189,7 @@ const a = Signal.of()
 const b = Signal.transduce(xf, a)
 const c = Signal.scan(R.flip(R.append), [], b)
 ;[4, 1, -3, 8, 7].map(a)
-c() // [0, -12, 18]
+c() //=> [0, -12, 18]
 ```
 
 #### Nested signals, reads, writes
@@ -209,12 +204,12 @@ const flag = Signal.of(false)
 const a = Signal.of()
 const b = Signal.of()
 
-link(a => {
+Signal.link(a => {
   push(`[2]:${a}`)
   push(`[3]:${flag()}`)
 }, a)
 
-link(b => {
+Signal.link(b => {
     push(`[1]:${b}`)
 L0: flag(true)
 L1: a(b * 2)
@@ -222,19 +217,19 @@ L2: flag(false)
     push(`[4]${flag()}`)
 }, b)
 
-b(2); acc // ['[1]:2', '[2]:4', '[3]:true', '[4]:false']
+b(2); acc //=> ['[1]:2', '[2]:4', '[3]:true', '[4]:false']
 ```
 
 Signals as well can be nested as one would expect.
 
 ```javascript
 const a = Signal.of(6)
-const b = link(a => {
+const b = Signal.link(a => {
   const c = Signal.of(a * 2)
-  const d = link(c => c / 3, c)
+  const d = Signal.link(c => c / 3, c)
   return d()
 }, a)
-b() // 4
+b() //=> 4
 ```
 
 And finally, signals can be passed around like ordinary values (which they are). The following example is a 16-bit ripple-carry adder using full adders (2 x XOR, 2 x AND, 1 x OR). That's a grand total of 113 signals.
@@ -242,9 +237,9 @@ And finally, signals can be passed around like ordinary values (which they are).
 ```javascript
 import * as R from 'ramda'
 
-const xor = R.unapply(link((a, b) => a ^ b))
-const and = R.unapply(link((a, b) => a & b))
-const or = R.unapply(link((a, b) => a | b))
+const xor = R.unapply(Signal.link((a, b) => a ^ b))
+const and = R.unapply(Signal.link((a, b) => a & b))
+const or = R.unapply(Signal.link((a, b) => a | b))
 const toString = radix => s => s.toString(radix)
 const padStart = (length, pad) => s => s.padStart(length, pad)
 const split = separator => s => s.split(separator)
@@ -271,7 +266,7 @@ const parallelAdder = cin => R.range(0, 16).reduce(acc => {
 const { a, b, s, cout } = parallelAdder(Signal.of(0))
 encode(47813).forEach((v, i) => a[i](v))
 encode(19987).forEach((v, i) => b[i](v))
-decode([...s.map(s => s()), cout()]) // 67800
+decode([...s.map(s => s()), cout()]) //=> 67800
 ```
 
 #### Fine-print: `undefined`
@@ -280,20 +275,20 @@ decode([...s.map(s => s()), cout()]) // 67800
 
 ```javascript
 const a = Signal.of()
-a() // undefined
-a(1); a() // 1
-a(undefined); a() // 1 (unchanged)
-a(null); a(); // null (valid signal value)
+a() //=> undefined
+a(1); a() //=> 1
+a(undefined); a() //=> 1 (unchanged)
+a(null); a(); //=> null (valid signal value)
 ```
 
 The same holds for linked signals.
 
 ```javascript
 const a = Signal.of(3)
-const b = link(a => a < 4 ? a * 2 : undefined, a)
-b() // 6
-a(4); b() // 6 (unchanged)
-a(1); b() // 2
+const b = Signal.link(a => a < 4 ? a * 2 : undefined, a)
+b() //=> 6
+a(4); b() //=> 6 (unchanged)
+a(1); b() //=> 2
 ```
 
 As a consequence, linked signals are only evaluated, if all input signals are defined.
@@ -303,11 +298,11 @@ const acc = []
 const push = x => acc.push(x)
 
 const a = Signal.of()
-link(push, a)
+Signal.link(push, a)
 
-acc // [] (not evaluated, yet)
-a(1); a(1); acc // [1, 1]
-a(2); acc // [1, 1, 2]
+acc //=> [] (not evaluated, yet)
+a(1); a(2); acc //=> [1, 2]
+a(3); acc //=> [1, 2, 3]
 ```
 
 #### Fine-print: Glitch-free
@@ -319,13 +314,13 @@ const acc = []
 const push = x => acc.push(x)
 
 const a = Signal.of(1)
-const b = link(a => a + 3, a)
-const c = link(a => a * 2, a)
-const d = link((b, c) => b / c, [b, c])
+const b = Signal.link(a => a + 3, a)
+const c = Signal.link(a => a * 2, a)
+const d = Signal.link((b, c) => b / c, [b, c])
 
-link(push, d)
-acc // [2] (d was evaluated once)
-a(3); acc // [2, 1] (d was evaluated once again)
+Signal.link(push, d)
+acc //=> [2] (d was evaluated once)
+a(3); acc //=> [2, 1] (d was evaluated once again)
 ```
 
 #### Fine-print: Disposable
@@ -348,7 +343,7 @@ Easy! None. Using Maybe, Either or similar as signal values might be beneficial.
 
 #### Why signals and not streams?
 
-Streams don't have the notion of a *current value*, which can be queried at any given time. Hence we favor the term signal over stream. Signals (think of digital logic circuits), have discrete values which can and usually do vary over time. Also, we *link* one or more input signals to one output signal `const AND = link((a, b) => a && b, [a, b])`.
+Streams don't have the notion of a *current value*, which can be queried at any given time. Hence we favor the term signal over stream. Signals (think of digital logic circuits), have discrete values which can and usually do vary over time. Also, we *link* one or more input signals to one output signal `const AND = link((a, b) => a && b, [a, b])`. In addition, signals have no buffering nor back-pressure handling.
 
 #### Miscellaneous Operators
 
@@ -366,7 +361,7 @@ fromListeners :: [String] -> Target -> Signal Event
 // startWith :: Signal s => a -> s a -> s a
 // startWith :: Signal s => (() -> a) -> s a -> s a
 const a = Signal.of()
-const b = link(a => a + 1, a)
+const b = Signal.link(a => a + 1, a)
 const c = Signal.startWith(0, b)
 c() //=> 0
 ```
@@ -382,8 +377,6 @@ const d = scan(R.flip(R.append), [], c)
 a(1); b('2'); b('3'); a(4); b('5')
 d() //=> [1, '2', '3', 4, '5']
 ```
-
-
 
 `scan` feeds back the calculated signal value as an accumulator for the next value.
 
@@ -424,7 +417,7 @@ a(1); b(2); c() //=> 3
 ```javascript
 // tap :: Signal s => (a -> any) -> s a -> s a
 const fn = R.compose(
-  Signal.tap(x => console.log(x)), // 2
+  Signal.tap(x => console.log(x)), //=> 2
   R.map(x => x + 1)
 )
 
