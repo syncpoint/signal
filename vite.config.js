@@ -3,12 +3,7 @@ import { defineConfig } from 'vite'
 
 const entry = path.resolve(__dirname, 'lib/index.js')
 const name = 'signal'
-const fileName = format =>
-  format === 'umd'
-    ? `${name}.umd.cjs`
-    : `${name}.es.js`
-
-const lib = { entry, name, fileName }
+const lib = { entry, name, formats: ['es'] }
 const build = { lib, sourcemap: true }
 
 export default defineConfig({ build })

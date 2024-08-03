@@ -5,17 +5,11 @@
   "type": "module",
   "description": "Algebraic type for time varying values",
   "files": [
-    "dist"
+    "dist",
+    "src",
+    "changelog"
   ],
-  "main": "./dist/signal.umd.cjs",
-  "module": "./dist/signal.es.js",
-  "exports": {
-    ".": {
-      "require": "./dist/signal.umd.cjs",
-      "import": "./dist/signal.es.js",
-      "default": "./dist/signal.umd.cjs"
-    }
-  },
+  "main": "./dist/signal.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/syncpoint/signal.git"
