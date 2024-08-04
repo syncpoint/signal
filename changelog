@@ -4,7 +4,7 @@
 * `options` to set/get options
 * supported options: custom `equals` and optional `label`
 * support fantasy-land Setoid and Ord (aka `equals` and `lte`)
-* `deferred`: deferred signal creation
+* `deferred`: deferred signal initialization
 
 1.3.0
 * dedicated µ-benchbarks
