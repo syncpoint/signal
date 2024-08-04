@@ -129,6 +129,8 @@ Signal conforms to [Fantasy Land](https://github.com/fantasyland/fantasy-land) s
 * Apply: `ap :: Signal s => s (a -> b) -> s a -> s b`
 * Applicative: `of :: Signal s => a -> s a`
 * Monad: `chain :: Signal s => (a -> s b) -> s a -> s b`
+* Setoid: `equals :: Signal s => s a -> s b -> Boolean`
+* Ord: `lte :: Signal s => s a -> s b -> Boolean`
 
 These operations can be used directly on signals (fluent interface) or preferably in point-free notation for improved composability.
 
