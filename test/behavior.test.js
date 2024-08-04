@@ -1,4 +1,5 @@
-import assert from 'assert'
+import assert from 'node:assert'
+import { setImmediate } from 'node:timers'
 import { describe, it } from 'mocha'
 import * as R from 'ramda'
 import Signal from '../lib/index.js'
@@ -7,7 +8,7 @@ describe('Behavior', function () {
   it('Signal should only update on changed value', function () {
     let called = 0
     const a = Signal.of()
-    const b = a.map(a => { called++; return a + 1 })
+    a.map(a => { called += 1; return a + 1 })
     assert.strictEqual(called, 0)
     a(1); assert.strictEqual(called, 1)
     a(1); assert.strictEqual(called, 1)
@@ -16,7 +17,7 @@ describe('Behavior', function () {
   it('Effect (direct) should only be called on changed value', function () {
     let called = 0
     const a = Signal.of()
-    a.on(() => called++)
+    a.on(() => (called += 1))
     assert.strictEqual(called, 0)
     a(1); assert.strictEqual(called, 1)
     a(1); assert.strictEqual(called, 1)
@@ -26,7 +27,7 @@ describe('Behavior', function () {
     let called = 0
     const a = Signal.of()
     const b = a.map(a => a % 2)
-    b.on(() => called++)
+    b.on(() => (called += 1))
     a(2); assert.strictEqual(called, 1)
     a(4); assert.strictEqual(called, 1)
   })

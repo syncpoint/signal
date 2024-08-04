@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-import fs from 'fs'
-import path from 'path'
-import os from 'os'
-import assert from 'assert'
-import { fileURLToPath } from 'url';
+import fs from 'node:fs'
+import path from 'node:path'
+import os from 'node:os'
+import assert from 'node:assert'
+import { fileURLToPath } from 'node:url';
 import * as bench from 'micro-bmark'
 import * as R from 'ramda'
 import Signal from '../lib/index.js'

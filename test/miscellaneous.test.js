@@ -1,4 +1,4 @@
-import assert from 'assert'
+import assert from 'node:assert'
 import { describe, it } from 'mocha'
 import * as R from 'ramda'
 import Signal from '../lib/index.js'
@@ -97,7 +97,7 @@ describe('miscellaneous operators', function () {
           acc.push(`+:${id}`)
           listener_ = listener
         }
-        const removeEventListener = (type, listener) => {
+        const removeEventListener = () => {
           acc.push(`-:${id}`)
           listener_ = null
         }

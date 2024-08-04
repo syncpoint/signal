@@ -1,4 +1,4 @@
-import assert from 'assert'
+import assert from 'node:assert'
 import { describe, it } from 'mocha'
 import Signal from '../lib/index.js'
 import sleep from './sleep.js'

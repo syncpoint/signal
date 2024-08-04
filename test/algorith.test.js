@@ -1,6 +1,6 @@
-import assert from 'assert'
-import { describe, it } from 'mocha'
+import assert from 'node:assert'
 import * as R from 'ramda'
+import { describe, it } from 'mocha'
 import Signal from '../lib/index.js'
 
 describe('algorithm', function () {
