@@ -2,161 +2,150 @@ import assert from 'node:assert'
 import * as R from 'ramda'
 import { describe, it } from 'mocha'
 import Signal from '../lib/index.js'
-import sleep from './sleep.js'
-import recorder from './recorder.js'
-import hasValue from './hasValue.js'
-import diamond from './diamond.js'
-import expectError from './expectError.js'
+import recorder from './_recorder.js'
+import diamond from './_diamond.js'
+import expectError from './_expectError.js'
 
-describe('Interface Specification', function () {
+describe('Signal.link', function () {
+  describe('evaluate linked signal on construction', function () {
 
-  ;[
-    ['8249/5c9d', undefined, 'Signal(undefined)'],
-    ['8249/42e4', 1, 'Signal(1)'],
-    ['8249/28bc', 'hello', 'Signal(hello)'],
-    ['8249/414f', {}, 'Signal([object Object])'],
-  ].forEach(([id, value, expected]) => {
-    it(`[${id}] toString() :: Signal s => s -> String`, function() {
-      const a = Signal.of(value)
-      assert.deepEqual(a.toString(), expected)
+    // Eagerly evalute linked signal on construction;
+    // no further processing.
+    // a. all sources are defined: call production with source values
+    // b. else: linked signal remains undefined
+
+    it('one undefined source', function () {
+      const a = Signal.of()
+      const b = Signal.link(R.add(1), a)
+      assert.strictEqual(b(), undefined)
+    })
+
+    it('one defined source', function () {
+      const a = Signal.of(1)
+      const b = Signal.link(R.add(2), a)
+      assert.strictEqual(b(), 3)
+    })
+
+    it('two defined sources', function () {
+      const a = Signal.of(1)
+      const b = Signal.of(2)
+      const c = Signal.link(R.add, [a, b])
+      assert.strictEqual(c(), 3)
     })
   })
 
-  it('[4ddf] toString() :: Signal s => s -> String', function () {
-    const a = Signal.of(0, { label: 'a' })
-    assert.strictEqual(a.toString(), 'Signal[a](0)')
+  it('update simple value with sinks (linear graph)', function () {
+    const a = Signal.of(1)
+    const b = Signal.link(R.add(1), a)
+    const c = Signal.link(R.add(1), b)
+    assert.strictEqual(c(), 3)
+    a(2); assert.strictEqual(c(), 4)
   })
 
-  it('[8a4a] toJSON :: Signal s -> JSON', function() {
-    const object = {
-      num: Signal.of(23),
-      str: Signal.of('string'),
-      obj: Signal.of({ is_object: true })
-    }
-
-    const expected = {
-      num: 23,
-      str: 'string',
-      obj: {
-        is_object: true
-      }
-    }
-
-    const actual = JSON.parse(JSON.stringify(object))
-    assert.deepEqual(actual, expected)
+  it('update simple value with sinks (diamond)', function () {
+    const a = Signal.of(1)
+    const b = Signal.link(R.add(1), a)
+    const c = Signal.link(R.add(2), a)
+    const d = Signal.link((b, c) => b * c, [b, c])
+    assert.strictEqual(d(), 6)
+    a(2); assert.strictEqual(d(), 12)
   })
 
-  ;[
-    ['null', null],
-    ['number', 0, 42],
-    ['string', '', 'x'],
-    ['boolean', false, true],
-    ['function', () => {}, x => x],
-    ['object', {}, { key: 'value ' }]
-  ].forEach(([type, ...values]) => {
-    // Create signal from value other than undefined.
-    it(`of :: Signal s, v ${type} => v -> s v`, function () {
-      values.forEach(value => {
-        assert(hasValue(Signal.of(value), value))
-      })
+  describe('"equals" option', function () {
+    it('link', function () {
+      // Consider two consecutive strings to be equal when their
+      // absolute difference in length is smaller than delta.
+      const delta = 4
+      const equals = (a, b) => Math.abs(a.length - b.length ) < delta
+      const a = Signal.of('A')
+      const b = Signal.of('B')
+      const c = Signal.link(R.concat, [a, b], { equals })
+      a('AA'); assert.strictEqual(c(), 'AB')
+      b('BBBB') ; assert.strictEqual(c(), 'AABBBB')
+      b('BB') ; assert.strictEqual(c(), 'AABBBB')
+      a(''); assert.strictEqual(c(), 'BB')
     })
   })
 
-  it('of :: Signal s, v undefined => v -> s v', function () {
-    // Value of undefined signal is `undefined`.
-    const s = Signal.of(undefined)
-    assert.strictEqual(s(), undefined)
-  })
-
-  ;[
-    ['d25b/4edd', 'null', null],
-    ['d25b/846d', 'number', 0],
-    ['d25b/e268', 'string', 'x'],
-    ['d25b/4c73', 'boolean', true],
-    ['d25b/9bd6', 'function', x => x],
-    ['d25b/56a9', 'object', { key: 'value ' }]
-  ].forEach(([id, label, v]) => {
-    // Updating signal with undefined is a no-op.
-    it(`[${id}] set :: Signal s => ${label} -> undefined -> s ${label}`, function () {
-      const s = Signal.of(v)
-      s(undefined)
-      assert.strictEqual(s(), v)
+  describe('"label" option', function () {
+    it('link', function () {
+      const a = Signal.of()
+      const b = Signal.link(a => a + 1, [a], { label: 'b' })
+      assert.deepStrictEqual(b.__label, 'b')
     })
   })
 
-  it('[0ce9] deferred :: Signal s => v -> s v', async function () {
-    const expected = 3
-    const s = Signal.deferred(expected)
-    await sleep()
-    assert.strictEqual(s(), expected)
-  })
+  describe('nested signal', function () {
+    it('[a5a6] evaluation order', function () {
+      const actual = []
+      const push = label => x => actual.push(`${label}:${x}`)
+      const input = Signal.of(1)
+      Signal.link(push('A'), [input])
+      const output = Signal.link(a => {
+        push('B')(a)
+        const inner = Signal.of(a + 1)
+        Signal.link(push('D'), [inner])
+        inner(a + 2)
+        push('C')(a)
+        return inner()
+      }, [input])
 
-  it('[4e40] deferred :: Signal s => () -> v -> s v', async function () {
-    const expected = 3
-    const s = Signal.deferred(() => expected)
-    await sleep()
-    assert.strictEqual(s(), expected)
-  })
-
-  it('[95ad] deferred :: Signal s, Promise p => p v -> s v', async function () {
-    const expected = 3
-    const s = Signal.deferred(Promise.resolve(3))
-    await sleep()
-    assert.strictEqual(s(), expected)
-  })
-
-  it('[4308] deferred :: Signal s, Promise p => () -> p v -> s v', async function () {
-    const expected = 3
-    const s = Signal.deferred(() => Promise.resolve(3))
-    await sleep()
-    assert.strictEqual(s(), expected)
-  })
-
-  it('[bdf8] reduce :: Signal s => (a -> b -> a) -> a -> s a', function () {
-    const fn = (n, c) => {
-      switch (c) {
-        case 'inc': return n + 1
-        case 'dec': return n - 1
-        default: return n
-      }
-    }
-
-    const s = Signal.reduce(fn, 0)
-    const actual = Signal.scan(R.flip(R.append), [], s)
-    s('inc'); s('inc'); s('inc'); s('dec'), s('noop')
-    assert.strictEqual(s(), 2)
-    assert.deepStrictEqual(actual(), [0, 1, 2, 3, 2])
-  })
-
-  ;[
-    ['475c/448c', undefined, null],
-    ['475c/b52f', undefined, 1],
-    ['475c/d329', null, 1],
-    ['475c/44e8', 1, null],
-    ['475c/9f4a', 1, 2]
-  ].forEach(([id, a, b]) => {
-    it(`[${id}] set :: Signal s => ${a} -> ${b} -> s ${b}`, function () {
-      const s = Signal.of(a)
-      s(b)
-      assert.strictEqual(s(), b)
+      Signal.link(push('E'), [input])
+      const expected = ['A:1', 'B:1', 'D:2', 'D:3', 'C:1', 'E:1']
+      assert.deepStrictEqual(actual, expected)
+      assert.strictEqual(output(), 3)
     })
-  })
 
-  it('[b420] set :: Signal s => () -> s', function() {
-    const expected = Signal.of()
-    const actual = expected(23)
-    assert.strictEqual(actual, expected)
-  });
+    it('[4ed9] atomic update: plain signal', function () {
+      const input = Signal.of(1)
+      const output = Signal.link(x => Signal.of(x)(), [input])
 
+      assert.strictEqual(input(), 1, 'input: unexpected value')
+      assert.strictEqual(output(), 1, 'output: unexpected value')
+    })
 
-  it('on :: Signal s => (a -> *) -> s a -> (() -> Unit)', function () {
-    const acc = []
-    const push = x => acc.push(x)
-    const a = Signal.of(2)
-    const dispose = a.on(push)
-    a(3); dispose()
-    a(4); a(5) // ignored after disposing effect.
-    assert.deepStrictEqual(acc, [2, 3])
+    it('[bd07] atomic update: linked signal', function () {
+      const input = Signal.of(1)
+      const output = Signal.link(x => Signal.link(a => a + 1, [Signal.of(x)])(), [input])
+      assert.strictEqual(output(), 2)
+    })
+
+    it('[b24e] nested read', function () {
+      const actual = []
+      const flag = Signal.of(false)
+      const a = Signal.of()
+      const b = Signal.of()
+
+      Signal.link(a => actual.push(`[2]:${a}:${flag()}`), [a])
+      Signal.link(b => {
+        actual.push(`[1]:${b}`)
+        flag(true)
+        a(2)
+        actual.push('[3]')
+        flag(false)
+      }, [b])
+
+      b(1)
+      const expected = ['[1]:1', '[2]:2:true', '[3]']
+      assert.deepStrictEqual(actual, expected)
+    })
+
+    it('[40c9] unnamed', function () {
+      const a = Signal.of()
+      const b = Signal.link(a => a + 1, [a])
+      const c = Signal.link((a, b) => a * b, [a, b])
+      a(2); assert.strictEqual(c(), 6)
+    })
+
+    it('[4654] nested write', function () {
+      const a = Signal.of(1) // immediately overwritten by 2
+      const b = Signal.of()
+      Signal.link(a, [b]) // [L1] aka Signal.link(b => a(b), b)
+      const c = Signal.link((a, b) => a + b, [a, b]) // [L2]
+      // L1 is executed before L2; thus L2 is only evaluated
+      // once with a=2, b=2.
+      b(2); assert.strictEqual(c(), 4)
+    })
   })
 
   describe('[TypeError] link :: Signal s => (...[any] -> b) -> [s any] -> s b', function () {

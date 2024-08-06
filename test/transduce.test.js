@@ -3,7 +3,7 @@ import { describe, it } from 'mocha'
 import * as R from 'ramda'
 import Signal from '../lib/index.js'
 
-describe('transducer [Ramda]', function () {
+describe('Signal.transduce [Ramda]', function () {
   it('map', function () {
     const xf = R.map(R.multiply(2))
     const a = Signal.of()

@@ -15,7 +15,7 @@
     "url": "https://github.com/syncpoint/signal.git"
   },
   "scripts": {
-    "test": "mocha './test/**/*.test.js'",
+    "test": "mocha --recursive './test/**/*.test.js'",
     "prepare": "vite build",
     "coverage": "c8 -all --include 'lib/**/*' --reporter=html mocha './test/**/*.test.js'"
   },

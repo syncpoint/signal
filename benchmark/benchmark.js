@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import * as bench from 'micro-bmark'
 import * as R from 'ramda'
 import Signal from '../lib/index.js'
-import { encode, decode, parallelAdder } from '../test/adder.js'
+import { encode, decode, parallelAdder } from '../test/_adder.js'
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

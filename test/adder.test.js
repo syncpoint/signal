@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 import { it } from 'mocha'
 import Signal from '../lib/index.js'
-import { encode, decode, parallelAdder } from './adder.js'
+import { encode, decode, parallelAdder } from './_adder.js'
 
 it('16-bit adder', function () {
   const x = 47813
